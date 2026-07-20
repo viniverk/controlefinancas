@@ -95,11 +95,19 @@
   .ff-day-detail { margin-top: 10px; }
   .ff-day-detail h4 { font-weight: 700; font-size: .84rem; margin: 0 0 4px; text-transform: capitalize; color: var(--text-soft); }
 
+  .ff-admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .ff-admin-card.disabled { opacity: .6; }
+  .ff-admin-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .ff-admin-name { font-weight: 700; font-size: .92rem; }
+  .ff-admin-email { font-size: .78rem; color: var(--text-soft); margin-top: 2px; }
+  .ff-admin-badge { font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--danger); color: #fff; white-space: nowrap; }
+  .ff-admin-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .ff-admin-actions .ff-btn { flex: 1; font-size: .78rem; padding: 7px 10px; }
+
   /* Modal */
   .ff-overlay { position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 60; padding: 16px; display: flex; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
   .ff-overlay[hidden] { display: none; }
-  #lockOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
-  #userOverlay { background: var(--bg); backdrop-filter: none; z-index: 90; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
+  #authOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
   .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
   .ff-modal h2 { font-size: 1.05rem; margin: 0 0 14px; }
   .ff-field { margin-bottom: 12px; }
@@ -143,44 +151,31 @@
 <body>
 
 
-<div class="ff-overlay" id="userOverlay" hidden>
+<div class="ff-overlay" id="authOverlay">
   <div class="ff-lock-card">
     <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
-    <h2>Quem é você?</h2>
-    <p class="ff-lock-sub">Escolha seu perfil ou crie um novo. Fica salvo neste navegador — não é uma senha.</p>
-    <div id="knownUsersList"></div>
-    <div class="ff-field">
-      <label>Novo perfil</label>
-      <input type="text" id="userNameInput" placeholder="Ex: Você ou Esposa" maxlength="30">
-    </div>
-    <div class="ff-error" id="userError"></div>
-    <button class="ff-btn ff-btn-primary" id="userSubmit" type="button" style="width:100%;">Entrar</button>
-  </div>
-</div>
+    <h2 id="authTitle">Carregando…</h2>
+    <p class="ff-lock-sub" id="authSub">Só um instante.</p>
 
-<div class="ff-overlay" id="lockOverlay">
-  <div class="ff-lock-card">
-    <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
-    <h2 id="lockTitle">Carregando…</h2>
-    <p class="ff-lock-sub" id="lockSub">Só um instante.</p>
-    <div class="ff-field" id="lockCurrentWrap" hidden>
-      <label>PIN atual</label>
-      <input type="password" inputmode="numeric" maxlength="8" id="lockCurrent">
+    <div class="ff-field" id="authNameWrap" hidden>
+      <label>Seu nome</label>
+      <input type="text" id="authName" placeholder="Ex: Você ou Esposa" maxlength="30">
     </div>
-    <div class="ff-field" id="lockMainWrap" hidden>
-      <label id="lockMainLabel">PIN</label>
-      <input type="password" inputmode="numeric" maxlength="8" id="lockMain">
+    <div class="ff-field" id="authFamilyWrap" hidden>
+      <label>Nome da família</label>
+      <input type="text" id="authFamily" placeholder="Ex: Família Silva" maxlength="40">
     </div>
-    <div class="ff-field" id="lockConfirmWrap" hidden>
-      <label>Confirmar PIN</label>
-      <input type="password" inputmode="numeric" maxlength="8" id="lockConfirm">
+    <div class="ff-field">
+      <label>E-mail</label>
+      <input type="email" id="authEmail" autocomplete="username">
     </div>
-    <div class="ff-error" id="lockError"></div>
-    <div class="ff-lock-actions">
-      <button class="ff-btn ff-btn-primary" id="lockSubmit" type="button" hidden>Continuar</button>
-      <button class="ff-btn ff-btn-ghost" id="lockSecondary" type="button" hidden>Usar sem PIN</button>
+    <div class="ff-field">
+      <label>Senha</label>
+      <input type="password" id="authPassword" autocomplete="current-password" minlength="6">
     </div>
-    <button class="ff-lock-link" id="lockForgot" type="button" hidden>Esqueci meu PIN</button>
+    <div class="ff-error" id="authError"></div>
+    <button class="ff-btn ff-btn-primary" id="authSubmit" type="button" style="width:100%;">Entrar</button>
+    <button class="ff-lock-link" id="authToggle" type="button">Não tem conta? Criar uma</button>
   </div>
 </div>
 
@@ -201,6 +196,7 @@
       <button class="ff-tab active" data-tab="overview">Início</button>
       <button class="ff-tab" data-tab="calendar">Calendário</button>
       <button class="ff-tab" data-tab="list">Lançamentos</button>
+      <button class="ff-tab" data-tab="admin" id="adminTabBtn" hidden>Admin</button>
     </nav>
 
     <section id="panelOverview"></section>
@@ -227,6 +223,11 @@
         <label class="ff-toggle"><input type="checkbox" id="showDone"> mostrar concluídos</label>
       </div>
       <div id="listContent"></div>
+    </section>
+
+    <section id="panelAdmin" hidden>
+      <div class="ff-section-title">Famílias cadastradas</div>
+      <div id="adminList"></div>
     </section>
   </div>
 </div>
@@ -314,23 +315,9 @@
     <div class="ff-settings-row">
       <div>
         <div class="ff-settings-label" id="logoutRowLabel">Você está como: —</div>
-        <div class="ff-settings-sub">Esquece seu nome neste navegador.</div>
+        <div class="ff-settings-sub">Sai da sua conta neste aparelho.</div>
       </div>
       <button class="ff-btn ff-btn-ghost" id="btnLogout">Sair</button>
-    </div>
-    <div class="ff-settings-row">
-      <div>
-        <div class="ff-settings-label" id="pinRowLabel">Definir PIN</div>
-        <div class="ff-settings-sub">Trava a tela — não protege os dados de verdade.</div>
-      </div>
-      <button class="ff-btn ff-btn-ghost" id="btnPinSettings">Configurar</button>
-    </div>
-    <div class="ff-settings-row" id="lockNowRow" hidden>
-      <div>
-        <div class="ff-settings-label">Bloquear agora</div>
-        <div class="ff-settings-sub">Fecha a tela até digitar o PIN de novo.</div>
-      </div>
-      <button class="ff-btn ff-btn-ghost" id="btnLockNow">Bloquear</button>
     </div>
     <div class="ff-settings-row">
       <div>
@@ -355,6 +342,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
   // ====================================================================
   // COLE AQUI a configuração do SEU projeto Firebase (veja o passo a passo
@@ -371,11 +359,10 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+  const auth = firebase.auth();
 </script>
 <script>
 (function () {
-  const STORAGE_KEY = 'ff-items';
-  const PIN_KEY = 'ff-pin';
   let items = [];
   let editingId = null;
   let activeListFilter = 'todos';
@@ -403,16 +390,29 @@
   calYear = now.getFullYear();
   calMonth = now.getMonth();
 
-  // ---- Data (Firebase Realtime Database — synced live between devices) ----
+  // ---- Data (Firebase Realtime Database — scoped to the logged-in family) ----
+  let currentUid = null;
+  let itemsListenerRef = null;
+
+  function itemsRef() { return db.ref('users/' + currentUid + '/items'); }
+  function profileRef(uidArg) { return db.ref('users/' + uidArg + '/profile'); }
+
   function startDataSync() {
-    db.ref(STORAGE_KEY).on('value', snapshot => {
+    stopDataSync();
+    itemsListenerRef = itemsRef();
+    itemsListenerRef.on('value', snapshot => {
       const val = snapshot.val();
       try { items = val ? JSON.parse(val) : []; } catch (e) { items = []; }
       renderAll();
     });
   }
+  function stopDataSync() {
+    if (itemsListenerRef) { itemsListenerRef.off(); itemsListenerRef = null; }
+    items = [];
+  }
   function saveData() {
-    try { db.ref(STORAGE_KEY).set(JSON.stringify(items)); }
+    if (!currentUid) return;
+    try { itemsRef().set(JSON.stringify(items)); }
     catch (e) { console.error('Erro ao salvar', e); }
   }
   function exportData() {
@@ -728,163 +728,175 @@
     }
   }
 
-  // ---- PIN lock (synced via Firebase — same PIN on every device) ----
-  let savedPin = null;
-  let lockMode = null;
-  async function loadPin() {
-    try {
-      const snapshot = await db.ref(PIN_KEY).once('value');
-      savedPin = snapshot.val();
-    } catch (e) { savedPin = null; }
-  }
-  async function savePinValue(v) {
-    savedPin = v;
-    try { await db.ref(PIN_KEY).set(v); } catch (e) { console.error(e); }
-  }
-  function hasActivePin() { return !!savedPin && savedPin !== '__no_pin__'; }
-  function updatePinUI() {
-    document.getElementById('pinRowLabel').textContent = hasActivePin() ? 'Alterar PIN' : 'Definir PIN';
-    document.getElementById('lockNowRow').hidden = !hasActivePin();
-  }
-  function openLock(mode) {
-    lockMode = mode;
-    document.getElementById('lockError').textContent = '';
-    ['lockCurrent', 'lockMain', 'lockConfirm'].forEach(id => document.getElementById(id).value = '');
-    const title = document.getElementById('lockTitle'), sub = document.getElementById('lockSub');
-    const currentWrap = document.getElementById('lockCurrentWrap'), mainWrap = document.getElementById('lockMainWrap');
-    const mainLabel = document.getElementById('lockMainLabel'), confirmWrap = document.getElementById('lockConfirmWrap');
-    const submitBtn = document.getElementById('lockSubmit'), secondaryBtn = document.getElementById('lockSecondary');
-    const forgotBtn = document.getElementById('lockForgot');
-    submitBtn.hidden = false;
-    if (mode === 'create') {
-      title.textContent = 'Criar um PIN';
-      sub.textContent = 'Evita que alguém abra as finanças de relance. Não criptografa nada.';
-      currentWrap.hidden = true; mainWrap.hidden = false; mainLabel.textContent = 'Novo PIN'; confirmWrap.hidden = false;
-      submitBtn.textContent = 'Salvar PIN'; secondaryBtn.hidden = false; secondaryBtn.textContent = 'Usar sem PIN'; forgotBtn.hidden = true;
-    } else if (mode === 'enter') {
-      title.textContent = 'Digite o PIN';
-      sub.textContent = 'Digite o PIN combinado para abrir.';
-      currentWrap.hidden = true; mainWrap.hidden = false; mainLabel.textContent = 'PIN'; confirmWrap.hidden = true;
-      submitBtn.textContent = 'Desbloquear'; secondaryBtn.hidden = true; forgotBtn.hidden = false;
-    } else if (mode === 'change') {
-      title.textContent = 'Alterar PIN';
-      sub.textContent = 'Defina um novo PIN.';
-      currentWrap.hidden = false; mainWrap.hidden = false; mainLabel.textContent = 'Novo PIN'; confirmWrap.hidden = false;
-      submitBtn.textContent = 'Salvar'; secondaryBtn.hidden = false; secondaryBtn.textContent = 'Remover PIN'; forgotBtn.hidden = true;
-    }
-    document.getElementById('lockOverlay').style.display = 'flex';
-    setTimeout(() => document.getElementById(mode === 'change' ? 'lockCurrent' : 'lockMain').focus(), 0);
-  }
-  // ---- Passwordless name tag (not real auth — just identifies who's using it) ----
-  const USER_KEY = 'ff-user-name';
-  const KNOWN_USERS_KEY = 'ff-known-users';
+  // ---- Real login (Firebase Authentication — email + password) ----
+  let authMode = 'signin';
   let currentUserName = null;
+  let currentFamilyName = null;
+  let isAdmin = false;
 
-  async function loadUserName() {
-    try { currentUserName = localStorage.getItem(USER_KEY); }
-    catch (e) { currentUserName = null; }
-  }
-  async function saveUserName(name) {
-    currentUserName = name;
-    try { localStorage.setItem(USER_KEY, name); } catch (e) { console.error(e); }
-  }
-  async function clearUserName() {
-    currentUserName = null;
-    try { localStorage.removeItem(USER_KEY); } catch (e) { console.error(e); }
-  }
-  async function loadKnownUsers() {
-    try {
-      const snapshot = await db.ref(KNOWN_USERS_KEY).once('value');
-      const val = snapshot.val();
-      return val ? JSON.parse(val) : [];
-    } catch (e) { return []; }
-  }
-  async function addKnownUser(name) {
-    const list = await loadKnownUsers();
-    if (!list.includes(name)) {
-      list.push(name);
-      try { await db.ref(KNOWN_USERS_KEY).set(JSON.stringify(list)); } catch (e) { console.error(e); }
-    }
-  }
   function updateUserUI() {
     const greeting = document.getElementById('userGreeting');
-    if (greeting) greeting.textContent = currentUserName ? `Olá, ${currentUserName} 👋` : '';
+    if (greeting) greeting.textContent = currentUserName ? `Olá, ${currentUserName}${currentFamilyName ? ' · ' + currentFamilyName : ''} 👋` : '';
     const logoutLabel = document.getElementById('logoutRowLabel');
-    if (logoutLabel) logoutLabel.textContent = currentUserName ? `Você está como: ${currentUserName}` : 'Nenhum nome definido';
+    if (logoutLabel) logoutLabel.textContent = currentUserName ? `Você está como: ${currentUserName}` : 'Você está conectado';
+    document.getElementById('adminTabBtn').hidden = !isAdmin;
   }
-  async function openUserScreen() {
-    document.getElementById('userError').textContent = '';
-    document.getElementById('userNameInput').value = '';
-    const known = await loadKnownUsers();
-    const listEl = document.getElementById('knownUsersList');
-    listEl.innerHTML = known.length
-      ? known.map(n => `<button type="button" class="ff-profile-btn" data-name="${escapeHtml(n)}">Continuar como ${escapeHtml(n)}</button>`).join('')
-        + `<div class="ff-profile-divider">ou crie um novo perfil abaixo</div>`
-      : '';
-    document.getElementById('userOverlay').hidden = false;
-    setTimeout(() => document.getElementById('userNameInput').focus(), 0);
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    document.getElementById('authError').textContent = '';
+    document.getElementById('authNameWrap').hidden = mode !== 'signup';
+    document.getElementById('authFamilyWrap').hidden = mode !== 'signup';
+    document.getElementById('authTitle').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
+    document.getElementById('authSub').textContent = mode === 'signup'
+      ? 'Crie o login da sua família. Você e seu cônjuge usam o mesmo e-mail e senha.'
+      : 'Entre com seu e-mail e senha.';
+    document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
+    document.getElementById('authToggle').textContent = mode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma';
   }
-  function closeUserScreen() { document.getElementById('userOverlay').hidden = true; }
-  async function selectUser(name) {
-    await saveUserName(name);
-    updateUserUI();
-    closeUserScreen();
+
+  function translateAuthError(code) {
+    const map = {
+      'auth/email-already-in-use': 'Esse e-mail já tem uma conta. Tente entrar.',
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/weak-password': 'A senha precisa ter pelo menos 6 caracteres.',
+      'auth/user-not-found': 'E-mail ou senha incorretos.',
+      'auth/wrong-password': 'E-mail ou senha incorretos.',
+      'auth/invalid-credential': 'E-mail ou senha incorretos.',
+      'auth/too-many-requests': 'Muitas tentativas. Espere um pouco e tente de novo.',
+      'auth/missing-password': 'Digite uma senha.'
+    };
+    return map[code] || 'Não foi possível entrar. Tente de novo.';
   }
-  async function handleUserSubmit() {
-    const name = document.getElementById('userNameInput').value.trim();
-    if (!name) { document.getElementById('userError').textContent = 'Digite um nome ou escolha um perfil acima.'; return; }
-    await addKnownUser(name);
-    await selectUser(name);
-  }
-  async function initUser() {
-    await loadUserName();
-    updateUserUI();
-    if (!currentUserName) openUserScreen();
-  }
-  function handleLogout() {
-    if (confirm('Sair? Da próxima vez você escolhe o perfil de novo.')) {
-      clearUserName();
-      updateUserUI();
-      document.getElementById('settingsOverlay').hidden = true;
-      openUserScreen();
+
+  async function handleAuthSubmit() {
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const errEl = document.getElementById('authError');
+    errEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'Preencha e-mail e senha.'; return; }
+    try {
+      if (authMode === 'signup') {
+        const name = document.getElementById('authName').value.trim();
+        const familyName = document.getElementById('authFamily').value.trim();
+        if (!name) { errEl.textContent = 'Informe seu nome.'; return; }
+        if (!familyName) { errEl.textContent = 'Informe o nome da família.'; return; }
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name });
+        await profileRef(cred.user.uid).set({
+          name, familyName, email, createdAt: new Date().toISOString()
+        });
+      } else {
+        await auth.signInWithEmailAndPassword(email, password);
+      }
+      // onAuthStateChanged cuida do resto
+    } catch (e) {
+      errEl.textContent = translateAuthError(e.code);
     }
   }
 
-  function closeLock() { document.getElementById('lockOverlay').style.display = 'none'; lockMode = null; initUser(); }
-  async function handleLockSubmit() {
-    const errEl = document.getElementById('lockError'); errEl.textContent = '';
-    const currentVal = document.getElementById('lockCurrent').value.trim();
-    const mainVal = document.getElementById('lockMain').value.trim();
-    const confirmVal = document.getElementById('lockConfirm').value.trim();
-    if (lockMode === 'create') {
-      if (mainVal.length < 4) return errEl.textContent = 'Use pelo menos 4 dígitos.';
-      if (mainVal !== confirmVal) return errEl.textContent = 'Os PINs não coincidem.';
-      await savePinValue(mainVal); closeLock(); updatePinUI();
-    } else if (lockMode === 'enter') {
-      if (mainVal !== savedPin) return errEl.textContent = 'PIN incorreto.';
-      closeLock(); updatePinUI();
-    } else if (lockMode === 'change') {
-      if (currentVal !== savedPin) return errEl.textContent = 'PIN atual incorreto.';
-      if (mainVal.length < 4) return errEl.textContent = 'Use pelo menos 4 dígitos.';
-      if (mainVal !== confirmVal) return errEl.textContent = 'Os PINs não coincidem.';
-      await savePinValue(mainVal); closeLock(); updatePinUI();
+  function handleLogout() {
+    if (confirm('Sair da sua conta?')) { auth.signOut(); }
+  }
+
+  async function checkDisabledAndAdmin(user) {
+    let disabled = false;
+    try {
+      const profSnap = await profileRef(user.uid).once('value');
+      const prof = profSnap.val();
+      if (prof) {
+        currentFamilyName = prof.familyName || null;
+        disabled = !!prof.disabled;
+      }
+    } catch (e) { /* regras podem bloquear leitura se desativado — tratado abaixo */ }
+
+    if (disabled) {
+      alert('Essa conta foi desativada pelo administrador.');
+      await auth.signOut();
+      return false;
+    }
+
+    try {
+      const adminSnap = await db.ref('admins/' + user.uid).once('value');
+      isAdmin = adminSnap.val() === true;
+    } catch (e) { isAdmin = false; }
+    return true;
+  }
+
+  function initAuth() {
+    auth.onAuthStateChanged(async user => {
+      if (user) {
+        currentUid = user.uid;
+        currentUserName = user.displayName || user.email;
+        const ok = await checkDisabledAndAdmin(user);
+        if (!ok) { currentUid = null; return; }
+        updateUserUI();
+        document.getElementById('authOverlay').style.display = 'none';
+        startDataSync();
+        if (isAdmin) renderAdminList();
+      } else {
+        stopDataSync();
+        currentUid = null;
+        currentUserName = null;
+        currentFamilyName = null;
+        isAdmin = false;
+        updateUserUI();
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+        document.getElementById('authError').textContent = '';
+        setAuthMode('signin');
+        document.getElementById('authOverlay').style.display = 'flex';
+      }
+    });
+  }
+
+  // ---- Admin panel ----
+  async function renderAdminList() {
+    const el = document.getElementById('adminList');
+    if (!el) return;
+    try {
+      const snap = await db.ref('users').once('value');
+      const all = snap.val() || {};
+      const entries = Object.entries(all);
+      if (!entries.length) { el.innerHTML = `<div class="ff-empty-note">Nenhuma família cadastrada ainda.</div>`; return; }
+      el.innerHTML = entries.map(([theirUid, data]) => {
+        const p = data.profile || {};
+        const itemCount = data.items ? (() => { try { return JSON.parse(data.items).length; } catch (e) { return 0; } })() : 0;
+        return `
+          <div class="ff-admin-card ${p.disabled ? 'disabled' : ''}" data-uid="${theirUid}">
+            <div class="ff-admin-top">
+              <div>
+                <div class="ff-admin-name">${escapeHtml(p.familyName || '(sem nome)')} — ${escapeHtml(p.name || '')}</div>
+                <div class="ff-admin-email">${escapeHtml(p.email || '')} · ${itemCount} lançamento${itemCount === 1 ? '' : 's'}</div>
+              </div>
+              ${p.disabled ? '<span class="ff-admin-badge">Desativada</span>' : ''}
+            </div>
+            <div class="ff-admin-actions">
+              <button class="ff-btn ff-btn-ghost" data-action="toggle-disable">${p.disabled ? 'Reativar conta' : 'Desativar conta'}</button>
+              <button class="ff-btn ff-btn-ghost" data-action="wipe-data">Apagar dados</button>
+            </div>
+          </div>`;
+      }).join('');
+    } catch (e) {
+      el.innerHTML = `<div class="ff-empty-note">Não foi possível carregar a lista (confira as regras do banco).</div>`;
     }
   }
-  function handleLockSecondary() {
-    if (lockMode === 'create') {
-      if (confirm('Usar sem PIN? Qualquer pessoa com o link vai poder abrir direto, sem nenhuma trava — vale pra todo mundo, não só pra você.')) {
-        savePinValue('__no_pin__'); closeLock(); updatePinUI();
+
+  function handleAdminListClick(e) {
+    const card = e.target.closest('.ff-admin-card');
+    if (!card) return;
+    const theirUid = card.dataset.uid;
+    const action = e.target.closest('button')?.dataset.action;
+    if (action === 'toggle-disable') {
+      db.ref('users/' + theirUid + '/profile/disabled').once('value').then(snap => {
+        const current = !!snap.val();
+        db.ref('users/' + theirUid + '/profile/disabled').set(!current).then(renderAdminList);
+      });
+    } else if (action === 'wipe-data') {
+      if (confirm('Apagar todos os lançamentos financeiros dessa família? Essa ação não pode ser desfeita.')) {
+        db.ref('users/' + theirUid + '/items').remove().then(renderAdminList);
       }
-    } else if (lockMode === 'change') { if (confirm('Remover a proteção por PIN?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); } }
-  }
-  function handleForgot() {
-    if (confirm('Isso remove a proteção por PIN. Os dados não são afetados. Continuar?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); }
-  }
-  async function initLock() {
-    await loadPin(); updatePinUI();
-    if (savedPin === null) openLock('create');
-    else if (savedPin === '__no_pin__') closeLock();
-    else openLock('enter');
+    }
   }
 
   // ---- Orchestration ----
@@ -894,12 +906,14 @@
     document.getElementById('panelOverview').hidden = tab !== 'overview';
     document.getElementById('panelCalendar').hidden = tab !== 'calendar';
     document.getElementById('panelList').hidden = tab !== 'list';
+    document.getElementById('panelAdmin').hidden = tab !== 'admin';
     renderAll();
   }
   function renderAll() {
     if (activeTab === 'overview') renderOverview();
     else if (activeTab === 'calendar') renderCalendar();
     else if (activeTab === 'list') renderList();
+    else if (activeTab === 'admin') renderAdminList();
   }
 
   function init() {
@@ -932,30 +946,20 @@
     document.getElementById('btnSettings').addEventListener('click', () => document.getElementById('settingsOverlay').hidden = false);
     document.getElementById('settingsClose').addEventListener('click', () => document.getElementById('settingsOverlay').hidden = true);
     document.getElementById('settingsOverlay').addEventListener('click', e => { if (e.target.id === 'settingsOverlay') document.getElementById('settingsOverlay').hidden = true; });
-    document.getElementById('btnPinSettings').addEventListener('click', () => { document.getElementById('settingsOverlay').hidden = true; openLock(hasActivePin() ? 'change' : 'create'); });
-    document.getElementById('btnLockNow').addEventListener('click', () => { document.getElementById('settingsOverlay').hidden = true; openLock('enter'); });
     document.getElementById('btnExport').addEventListener('click', exportData);
     document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
     document.getElementById('importFile').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
-
-    document.getElementById('lockSubmit').addEventListener('click', handleLockSubmit);
-    document.getElementById('lockSecondary').addEventListener('click', handleLockSecondary);
-    document.getElementById('lockForgot').addEventListener('click', handleForgot);
-    ['lockCurrent', 'lockMain', 'lockConfirm'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleLockSubmit(); } });
-    });
-
-    document.getElementById('userSubmit').addEventListener('click', handleUserSubmit);
-    document.getElementById('userNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleUserSubmit(); } });
-    document.getElementById('knownUsersList').addEventListener('click', e => {
-      const btn = e.target.closest('button[data-name]');
-      if (btn) selectUser(btn.dataset.name);
-    });
     document.getElementById('btnLogout').addEventListener('click', handleLogout);
 
+    document.getElementById('authSubmit').addEventListener('click', handleAuthSubmit);
+    document.getElementById('authToggle').addEventListener('click', () => setAuthMode(authMode === 'signup' ? 'signin' : 'signup'));
+    ['authEmail', 'authPassword', 'authName', 'authFamily'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); } });
+    });
+    document.getElementById('adminList').addEventListener('click', handleAdminListClick);
+
     toggleFormFields();
-    startDataSync();
-    initLock();
+    initAuth();
   }
 
   init();
