@@ -176,6 +176,7 @@
     <div class="ff-error" id="authError"></div>
     <button class="ff-btn ff-btn-primary" id="authSubmit" type="button" style="width:100%;">Entrar</button>
     <button class="ff-lock-link" id="authToggle" type="button">Não tem conta? Criar uma</button>
+    <button class="ff-lock-link" id="authForgot" type="button">Esqueceu a senha?</button>
   </div>
 </div>
 
@@ -745,6 +746,7 @@
   function setAuthMode(mode) {
     authMode = mode;
     document.getElementById('authError').textContent = '';
+    document.getElementById('authError').style.color = '';
     document.getElementById('authNameWrap').hidden = mode !== 'signup';
     document.getElementById('authFamilyWrap').hidden = mode !== 'signup';
     document.getElementById('authTitle').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
@@ -753,6 +755,21 @@
       : 'Entre com seu e-mail e senha.';
     document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
     document.getElementById('authToggle').textContent = mode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma';
+    document.getElementById('authForgot').hidden = mode === 'signup';
+  }
+
+  async function handleForgotPassword() {
+    const errEl = document.getElementById('authError');
+    const email = document.getElementById('authEmail').value.trim();
+    errEl.style.color = '';
+    if (!email) { errEl.textContent = 'Digite seu e-mail no campo acima primeiro.'; return; }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      errEl.style.color = 'var(--primary)';
+      errEl.textContent = `Enviamos um link para redefinir a senha em ${email}. Confira sua caixa de entrada (e o spam).`;
+    } catch (e) {
+      errEl.textContent = translateAuthError(e.code);
+    }
   }
 
   function translateAuthError(code) {
@@ -953,6 +970,7 @@
 
     document.getElementById('authSubmit').addEventListener('click', handleAuthSubmit);
     document.getElementById('authToggle').addEventListener('click', () => setAuthMode(authMode === 'signup' ? 'signin' : 'signup'));
+    document.getElementById('authForgot').addEventListener('click', handleForgotPassword);
     ['authEmail', 'authPassword', 'authName', 'authFamily'].forEach(id => {
       document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); } });
     });
