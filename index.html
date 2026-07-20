@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle Financeiro da Casa</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #16241f;
+    min-height: 100vh;
+  }
+
+  .fc-app {
+    --bg: #16241f;
+    --paper: #f8f3e6;
+    --paper-line: #ded2ae;
+    --ink: #1f2e28;
+    --ink-soft: #5b6a5f;
+    --brass: #a9812f;
+    --brass-deep: #7d5f22;
+    --paid: #3f7856;
+    --soon: #b8862c;
+    --overdue: #b03f34;
+    --done: #8a8374;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    padding: 28px 16px 60px;
+    border-radius: 18px;
+    min-height: 100%;
+  }
+  .fc-app * { box-sizing: border-box; }
+  .fc-wrap { max-width: 880px; margin: 0 auto; }
+
+  .fc-cover {
+    background: linear-gradient(180deg, #1c322b, #16241f);
+    border-radius: 14px 14px 0 0;
+    padding: 30px 28px 22px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #2a3f36;
+    border-bottom: none;
+  }
+  .fc-cover::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 14px;
+    background-image: repeating-linear-gradient(180deg, #3a5347 0, #3a5347 3px, transparent 3px, transparent 11px);
+    opacity: .6;
+  }
+  .fc-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: .68rem;
+    letter-spacing: .18em;
+    color: #d8c789;
+    text-transform: uppercase;
+  }
+  .fc-cover h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+    color: #f8f3e6;
+    margin: 6px 0 6px;
+    letter-spacing: -.01em;
+  }
+  .fc-cover p { color: #b9c7bd; font-size: .92rem; margin: 0; max-width: 46ch; }
+
+  .fc-summary {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-top: none;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .fc-stat {
+    background: #fffdf7;
+    border: 1px solid var(--paper-line);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .fc-stat-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); font-weight: 600; }
+  .fc-stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 1.15rem; font-weight: 600; margin-top: 4px; color: var(--ink); }
+  .fc-stat-value.warn { color: var(--overdue); }
+  .fc-stat-sub { font-size: .74rem; color: var(--ink-soft); margin-top: 2px; }
+
+  .fc-toolbar {
+    background: var(--paper);
+    border-left: 1px solid var(--paper-line);
+    border-right: 1px solid var(--paper-line);
+    padding: 14px 18px 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .fc-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .fc-tab {
+    font-family: 'Inter', sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--paper-line);
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .fc-tab.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .fc-toolbar-actions { display: flex; align-items: center; gap: 14px; }
+  .fc-toggle { font-size: .78rem; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .fc-btn-primary {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: .84rem;
+    background: var(--brass);
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .fc-btn-primary:hover { background: var(--brass-deep); }
+
+  .fc-list {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: 0 0 14px 14px;
+    padding: 8px 18px 22px;
+  }
+  .fc-group { margin-top: 18px; }
+  .fc-group-title {
+    font-family: 'Fraunces', serif;
+    font-size: .82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--brass-deep);
+    border-bottom: 1px dashed var(--paper-line);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+  }
+  .fc-row {
+    display: grid;
+    grid-template-columns: 1.6fr .9fr 1fr 1.1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .fc-row:last-child { border-bottom: none; }
+  .fc-row-name { font-weight: 600; font-size: .92rem; }
+  .fc-row-tag { font-size: .72rem; color: var(--ink-soft); margin-top: 2px; }
+  .fc-row-value { font-family: 'IBM Plex Mono', monospace; font-size: .9rem; font-weight: 600; }
+  .fc-row-progress { font-family: 'IBM Plex Mono', monospace; font-size: .76rem; color: var(--ink-soft); }
+  .fc-due { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+  .fc-due-text { font-size: .72rem; color: var(--ink-soft); }
+
+  .fc-stamp {
+    display: inline-block;
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    font-size: .66rem;
+    padding: 3px 9px;
+    border: 2px solid currentColor;
+    border-radius: 4px;
+    transform: rotate(-3deg);
+    white-space: nowrap;
+  }
+  .fc-stamp.ok { color: var(--paid); }
+  .fc-stamp.soon { color: var(--soon); }
+  .fc-stamp.overdue { color: var(--overdue); }
+  .fc-stamp.done { color: var(--done); border-style: dashed; transform: rotate(0); }
+
+  .fc-row-actions { display: flex; gap: 4px; }
+  .fc-icon-btn {
+    background: transparent;
+    border: 1px solid var(--paper-line);
+    border-radius: 6px;
+    width: 28px; height: 28px;
+    cursor: pointer;
+    font-size: .82rem;
+    color: var(--ink);
+  }
+  .fc-icon-btn:hover { background: #efe6d0; }
+  .fc-icon-btn.danger:hover { background: #f3ded9; color: var(--overdue); }
+
+  .fc-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+  }
+  .fc-empty p { margin: 0 0 14px; font-size: .9rem; }
+
+  .fc-overlay {
+    position: fixed; inset: 0;
+    background: rgba(20, 30, 26, .55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    padding: 16px;
+  }
+  .fc-modal {
+    background: var(--paper);
+    border-radius: 12px;
+    padding: 22px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border: 1px solid var(--paper-line);
+  }
+  .fc-modal h2 { font-family: 'Fraunces', serif; font-size: 1.2rem; margin: 0 0 14px; }
+  .fc-field { margin-bottom: 12px; }
+  .fc-field label { display: block; font-size: .76rem; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+  .fc-field input, .fc-field select, .fc-field textarea {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: .88rem;
+    padding: 8px 10px;
+    border: 1px solid var(--paper-line);
+    border-radius: 6px;
+    background: #fffdf7;
+    color: var(--ink);
+  }
+  .fc-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fc-check { display: flex; align-items: center; gap: 8px; font-size: .84rem; }
+  .fc-check input { width: auto; }
+  .fc-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+  .fc-btn-ghost {
+    background: transparent; border: 1px solid var(--paper-line); border-radius: 8px;
+    padding: 9px 14px; font-size: .84rem; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+  }
+  .fc-error { color: var(--overdue); font-size: .76rem; margin-top: 8px; min-height: 1em; }
+
+  @media (max-width: 640px) {
+    .fc-summary { grid-template-columns: 1fr 1fr; }
+    .fc-row { grid-template-columns: 1fr; gap: 4px; }
+    .fc-row-actions { justify-content: flex-start; margin-top: 4px; }
+    .fc-field-row { grid-template-columns: 1fr; }
+  }
+
+  .fc-lock-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(180deg, #1c322b, #16241f);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 16px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .fc-lock-card {
+    background: #f8f3e6;
+    border-radius: 14px;
+    padding: 28px 26px;
+    width: 100%;
+    max-width: 380px;
+    border: 1px solid #ded2ae;
+    box-sizing: border-box;
+  }
+  .fc-lock-card * { box-sizing: border-box; }
+  .fc-lock-card h2 { font-family: 'Fraunces', serif; font-size: 1.3rem; margin: 6px 0 6px; color: #1f2e28; }
+  .fc-lock-sub { font-size: .82rem; color: #5b6a5f; margin: 0 0 16px; line-height: 1.45; }
+  .fc-lock-card .fc-field { margin-bottom: 12px; }
+  .fc-lock-card .fc-field label { display: block; font-size: .76rem; font-weight: 600; color: #5b6a5f; margin-bottom: 4px; }
+  .fc-lock-card .fc-field input {
+    width: 100%;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: .2em;
+    font-size: 1rem;
+    padding: 9px 10px;
+    border: 1px solid #ded2ae;
+    border-radius: 6px;
+    background: #fffdf7;
+    color: #1f2e28;
+  }
+  .fc-lock-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .fc-lock-actions button { flex: 1; }
+  .fc-lock-link {
+    display: block; width: 100%; margin: 14px 0 0; background: none; border: none;
+    color: #7d5f22; font-size: .78rem; font-weight: 600; cursor: pointer;
+    text-decoration: underline; text-align: center; padding: 0;
+  }
+</style>
+</head>
+<body>
+
+
+<div class="fc-lock-overlay" id="fcLockOverlay">
+  <div class="fc-lock-card">
+    <div class="fc-eyebrow" style="color:#7d5f22;">Caderneta digital</div>
+    <h2 id="fcLockTitle">Carregando…</h2>
+    <p class="fc-lock-sub" id="fcLockSub">Só um instante.</p>
+
+    <div class="fc-field" id="fcLockCurrentWrap" hidden>
+      <label>PIN atual</label>
+      <input type="password" inputmode="numeric" maxlength="8" id="fcLockCurrent">
+    </div>
+    <div class="fc-field" id="fcLockMainWrap" hidden>
+      <label id="fcLockMainLabel">PIN</label>
+      <input type="password" inputmode="numeric" maxlength="8" id="fcLockMain">
+    </div>
+    <div class="fc-field" id="fcLockConfirmWrap" hidden>
+      <label>Confirmar PIN</label>
+      <input type="password" inputmode="numeric" maxlength="8" id="fcLockConfirm">
+    </div>
+
+    <div class="fc-error" id="fcLockError"></div>
+
+    <div class="fc-lock-actions">
+      <button class="fc-btn-primary" id="fcLockSubmit" type="button" hidden>Continuar</button>
+      <button class="fc-btn-ghost" id="fcLockSecondary" type="button" hidden>Usar sem PIN</button>
+    </div>
+    <button class="fc-lock-link" id="fcLockForgot" type="button" hidden>Esqueci meu PIN</button>
+  </div>
+</div>
+
+<div class="fc-app">
+  <div class="fc-wrap">
+    <div class="fc-cover">
+      <div class="fc-eyebrow">Caderneta digital</div>
+      <h1>Controle financeiro da casa</h1>
+      <p>Contas fixas, financiamentos, empréstimos e consórcios — tudo com data marcada e lembrete de vencimento.</p>
+    </div>
+
+    <div class="fc-summary" id="fcSummary"></div>
+
+    <div class="fc-toolbar">
+      <div class="fc-tabs" id="fcTabs"></div>
+      <div class="fc-toolbar-actions">
+        <label class="fc-toggle"><input type="checkbox" id="fcShowDone"> mostrar quitados</label>
+        <button class="fc-icon-btn" id="fcBtnExport" title="Exportar dados (.json)">⇩</button>
+        <button class="fc-icon-btn" id="fcBtnImport" title="Importar dados (.json)">⇧</button>
+        <input type="file" id="fcImportFile" accept="application/json" hidden>
+        <button class="fc-icon-btn" id="fcBtnLock" title="Bloquear agora" hidden>🔒</button>
+        <button class="fc-lock-link" id="fcBtnPinSettings" type="button" style="display:inline;width:auto;margin:0;">Definir PIN</button>
+        <button class="fc-btn-primary" id="fcBtnAdd">+ Novo lançamento</button>
+      </div>
+    </div>
+
+    <div class="fc-list" id="fcList"></div>
+  </div>
+</div>
+
+<div class="fc-overlay" id="fcOverlay" hidden>
+  <form class="fc-modal" id="fcForm">
+    <h2 id="fcFormTitle">Novo lançamento</h2>
+
+    <div class="fc-field">
+      <label>Tipo</label>
+      <select id="fcTipo">
+        <option value="conta">Conta fixa (água, luz, internet...)</option>
+        <option value="financiamento">Financiamento</option>
+        <option value="emprestimo">Empréstimo</option>
+        <option value="consorcio">Consórcio</option>
+      </select>
+    </div>
+
+    <div class="fc-field">
+      <label>Nome</label>
+      <input id="fcNome" type="text" placeholder="Ex: Financiamento do carro" required>
+    </div>
+
+    <div class="fc-field" id="fcCategoriaWrap">
+      <label>Categoria</label>
+      <input id="fcCategoria" type="text" placeholder="Ex: Moradia, Água, Internet">
+    </div>
+
+    <div class="fc-field-row">
+      <div class="fc-field">
+        <label>Valor da parcela (R$)</label>
+        <input id="fcValor" type="number" min="0" step="0.01" required>
+      </div>
+      <div class="fc-field">
+        <label>Dia do vencimento</label>
+        <input id="fcDia" type="number" min="1" max="31" required>
+      </div>
+    </div>
+
+    <div class="fc-field-row" id="fcParcelasWrap">
+      <div class="fc-field">
+        <label>Total de parcelas</label>
+        <input id="fcTotalParcelas" type="number" min="1">
+      </div>
+      <div class="fc-field">
+        <label>Parcelas já pagas</label>
+        <input id="fcParcelasPagas" type="number" min="0" value="0">
+      </div>
+    </div>
+
+    <div class="fc-field" id="fcContempladoWrap">
+      <label class="fc-check"><input type="checkbox" id="fcContemplado"> Já foi contemplado</label>
+    </div>
+
+    <div class="fc-field">
+      <label>Observação (opcional)</label>
+      <textarea id="fcObs" rows="2" placeholder="Banco, número do contrato, etc."></textarea>
+    </div>
+
+    <div class="fc-error" id="fcErrorMsg"></div>
+
+    <div class="fc-modal-actions">
+      <button type="button" class="fc-btn-ghost" id="fcCancel">Cancelar</button>
+      <button type="submit" class="fc-btn-primary">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'financas-casa-itens';
+  let items = [];
+  let editingId = null;
+  let activeTab = 'todos';
+  let showDone = false;
+
+  const fmtMoney = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const fmtDate = d => d.toLocaleDateString('pt-BR');
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+  const cycleOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+  const TIPO_LABEL = { conta: 'Conta fixa', financiamento: 'Financiamento', emprestimo: 'Empréstimo', consorcio: 'Consórcio' };
+
+  async function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      items = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      items = [];
+    }
+  }
+
+  async function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch (e) {
+      console.error('Erro ao salvar', e);
+    }
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify({ items }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `controle-financeiro-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importData(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        const incoming = Array.isArray(parsed) ? parsed : parsed.items;
+        if (!Array.isArray(incoming)) throw new Error('Formato inválido');
+        const merge = confirm(`Encontrei ${incoming.length} lançamento(s) no arquivo.\n\nOK = mesclar com os dados atuais\nCancelar = substituir tudo pelos dados do arquivo`);
+        if (merge) {
+          const existingIds = new Set(items.map(i => i.id));
+          incoming.forEach(i => { if (!existingIds.has(i.id)) items.push(i); });
+        } else {
+          items = incoming;
+        }
+        saveData();
+        render();
+        alert('Dados importados com sucesso.');
+      } catch (err) {
+        alert('Não consegui ler esse arquivo. Confira se é um .json exportado por essa mesma ferramenta.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---- PIN lock (privacidade de tela, não é criptografia real) ----
+  const PIN_KEY = 'financas-casa-pin';
+  let savedPin = null; // null = nunca configurado · '__no_pin__' = configurado para não usar · string = PIN ativo
+  let lockMode = null;
+
+  async function loadPin() {
+    try {
+      savedPin = localStorage.getItem(PIN_KEY);
+    } catch (e) {
+      savedPin = null;
+    }
+  }
+
+  async function savePinValue(v) {
+    savedPin = v;
+    try { localStorage.setItem(PIN_KEY, v); } catch (e) { console.error('Erro ao salvar PIN', e); }
+  }
+
+  function hasActivePin() { return !!savedPin && savedPin !== '__no_pin__'; }
+
+  function updateLockButtons() {
+    document.getElementById('fcBtnLock').hidden = !hasActivePin();
+    document.getElementById('fcBtnPinSettings').textContent = hasActivePin() ? 'Alterar PIN' : 'Definir PIN';
+  }
+
+  function openLock(mode) {
+    lockMode = mode;
+    document.getElementById('fcLockError').textContent = '';
+    document.getElementById('fcLockCurrent').value = '';
+    document.getElementById('fcLockMain').value = '';
+    document.getElementById('fcLockConfirm').value = '';
+
+    const title = document.getElementById('fcLockTitle');
+    const sub = document.getElementById('fcLockSub');
+    const currentWrap = document.getElementById('fcLockCurrentWrap');
+    const mainWrap = document.getElementById('fcLockMainWrap');
+    const mainLabel = document.getElementById('fcLockMainLabel');
+    const confirmWrap = document.getElementById('fcLockConfirmWrap');
+    const submitBtn = document.getElementById('fcLockSubmit');
+    const secondaryBtn = document.getElementById('fcLockSecondary');
+    const forgotBtn = document.getElementById('fcLockForgot');
+    submitBtn.hidden = false;
+
+    if (mode === 'create') {
+      title.textContent = 'Criar um PIN';
+      sub.textContent = 'Serve só pra evitar que alguém abra sua caderneta de relance — não criptografa nada nem substitui uma senha de verdade.';
+      currentWrap.hidden = true;
+      mainWrap.hidden = false;
+      mainLabel.textContent = 'Novo PIN';
+      confirmWrap.hidden = false;
+      submitBtn.textContent = 'Salvar PIN';
+      secondaryBtn.hidden = false;
+      secondaryBtn.textContent = 'Usar sem PIN';
+      forgotBtn.hidden = true;
+    } else if (mode === 'enter') {
+      title.textContent = 'Digite seu PIN';
+      sub.textContent = 'Digite o PIN para abrir sua caderneta.';
+      currentWrap.hidden = true;
+      mainWrap.hidden = false;
+      mainLabel.textContent = 'PIN';
+      confirmWrap.hidden = true;
+      submitBtn.textContent = 'Desbloquear';
+      secondaryBtn.hidden = true;
+      forgotBtn.hidden = false;
+    } else if (mode === 'change') {
+      title.textContent = 'Alterar PIN';
+      sub.textContent = 'Defina um novo PIN para a tela.';
+      currentWrap.hidden = false;
+      mainWrap.hidden = false;
+      mainLabel.textContent = 'Novo PIN';
+      confirmWrap.hidden = false;
+      submitBtn.textContent = 'Salvar';
+      secondaryBtn.hidden = false;
+      secondaryBtn.textContent = 'Remover PIN';
+      forgotBtn.hidden = true;
+    }
+    document.getElementById('fcLockOverlay').style.display = 'flex';
+    const focusTarget = document.getElementById(mode === 'change' ? 'fcLockCurrent' : 'fcLockMain');
+    setTimeout(() => focusTarget.focus(), 0);
+  }
+
+  function closeLock() {
+    document.getElementById('fcLockOverlay').style.display = 'none';
+    lockMode = null;
+  }
+
+  async function handleLockSubmit() {
+    const errEl = document.getElementById('fcLockError');
+    errEl.textContent = '';
+    const currentVal = document.getElementById('fcLockCurrent').value.trim();
+    const mainVal = document.getElementById('fcLockMain').value.trim();
+    const confirmVal = document.getElementById('fcLockConfirm').value.trim();
+
+    if (lockMode === 'create') {
+      if (mainVal.length < 4) return errEl.textContent = 'Use pelo menos 4 dígitos.';
+      if (mainVal !== confirmVal) return errEl.textContent = 'Os PINs não coincidem.';
+      await savePinValue(mainVal);
+      closeLock(); updateLockButtons();
+    } else if (lockMode === 'enter') {
+      if (mainVal !== savedPin) return errEl.textContent = 'PIN incorreto.';
+      closeLock(); updateLockButtons();
+    } else if (lockMode === 'change') {
+      if (currentVal !== savedPin) return errEl.textContent = 'PIN atual incorreto.';
+      if (mainVal.length < 4) return errEl.textContent = 'Use pelo menos 4 dígitos.';
+      if (mainVal !== confirmVal) return errEl.textContent = 'Os PINs não coincidem.';
+      await savePinValue(mainVal);
+      closeLock(); updateLockButtons();
+    }
+  }
+
+  function handleLockSecondary() {
+    if (lockMode === 'create') {
+      savePinValue('__no_pin__');
+      closeLock(); updateLockButtons();
+    } else if (lockMode === 'change') {
+      if (confirm('Remover a proteção por PIN?')) {
+        savePinValue('__no_pin__');
+        closeLock(); updateLockButtons();
+      }
+    }
+  }
+
+  function handleForgot() {
+    if (confirm('Isso remove a proteção por PIN. Seus dados financeiros não são afetados. Continuar?')) {
+      savePinValue('__no_pin__');
+      closeLock(); updateLockButtons();
+    }
+  }
+
+  async function initLock() {
+    await loadPin();
+    updateLockButtons();
+    if (savedPin === null) openLock('create');
+    else if (savedPin === '__no_pin__') closeLock();
+    else openLock('enter');
+  }
+
+  function getNextDue(item, ref = new Date()) {
+    let y = ref.getFullYear(), m = ref.getMonth();
+    const currentCycle = cycleOf(new Date(y, m, 1));
+    if (item.ultimoPagamento === currentCycle) {
+      m += 1;
+      if (m > 11) { m = 0; y += 1; }
+    }
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const day = Math.min(item.diaVencimento, daysInMonth);
+    return new Date(y, m, day);
+  }
+
+  function getStatus(item) {
+    if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) {
+      return { status: 'done' };
+    }
+    const due = getNextDue(item);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((due - today) / 86400000);
+    let status = 'ok';
+    if (diffDays < 0) status = 'overdue';
+    else if (diffDays <= 7) status = 'soon';
+    return { status, due, diffDays };
+  }
+
+  function dueText(info) {
+    if (info.status === 'done') return 'Quitado';
+    if (info.diffDays === 0) return 'Vence hoje';
+    if (info.diffDays === 1) return 'Vence amanhã';
+    if (info.diffDays > 1) return `Vence em ${info.diffDays} dias`;
+    if (info.diffDays === -1) return 'Venceu há 1 dia';
+    return `Venceu há ${Math.abs(info.diffDays)} dias`;
+  }
+
+  function stampLabel(status) {
+    return { ok: 'Em dia', soon: 'Vence em breve', overdue: 'Atrasado', done: 'Quitado' }[status];
+  }
+
+  function renderSummary() {
+    const active = items.filter(i => getStatus(i).status !== 'done');
+    const totalMensal = active.reduce((s, i) => s + Number(i.valorParcela || 0), 0);
+    const overdue = active.filter(i => getStatus(i).status === 'overdue');
+    const soon = active.filter(i => getStatus(i).status === 'soon');
+    let proximo = null;
+    active.forEach(i => {
+      const info = getStatus(i);
+      if (!proximo || info.diffDays < proximo.diffDays) proximo = { nome: i.nome, ...info };
+    });
+
+    const el = document.getElementById('fcSummary');
+    el.innerHTML = `
+      <div class="fc-stat">
+        <div class="fc-stat-label">Compromisso mensal</div>
+        <div class="fc-stat-value">${fmtMoney(totalMensal)}</div>
+        <div class="fc-stat-sub">${active.length} lançamento${active.length === 1 ? '' : 's'} ativo${active.length === 1 ? '' : 's'}</div>
+      </div>
+      <div class="fc-stat">
+        <div class="fc-stat-label">Em atraso</div>
+        <div class="fc-stat-value ${overdue.length ? 'warn' : ''}">${overdue.length}</div>
+        <div class="fc-stat-sub">${fmtMoney(overdue.reduce((s, i) => s + Number(i.valorParcela || 0), 0))}</div>
+      </div>
+      <div class="fc-stat">
+        <div class="fc-stat-label">Vence em 7 dias</div>
+        <div class="fc-stat-value">${soon.length}</div>
+        <div class="fc-stat-sub">${fmtMoney(soon.reduce((s, i) => s + Number(i.valorParcela || 0), 0))}</div>
+      </div>
+      <div class="fc-stat">
+        <div class="fc-stat-label">Próximo vencimento</div>
+        <div class="fc-stat-value" style="font-size:.92rem">${proximo ? proximo.nome : '—'}</div>
+        <div class="fc-stat-sub">${proximo ? fmtDate(proximo.due) : 'Nada pendente'}</div>
+      </div>
+    `;
+  }
+
+  function renderTabs() {
+    const tabs = [
+      { id: 'todos', label: 'Todos' },
+      { id: 'conta', label: 'Contas fixas' },
+      { id: 'credito', label: 'Financ. & Empréstimos' },
+      { id: 'consorcio', label: 'Consórcios' }
+    ];
+    document.getElementById('fcTabs').innerHTML = tabs.map(t =>
+      `<button class="fc-tab ${activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>`
+    ).join('');
+  }
+
+  function matchesTab(item) {
+    if (activeTab === 'todos') return true;
+    if (activeTab === 'credito') return item.tipo === 'financiamento' || item.tipo === 'emprestimo';
+    return item.tipo === activeTab;
+  }
+
+  function rowHtml(item) {
+    const info = getStatus(item);
+    const tag = item.tipo === 'conta' ? (item.categoria || 'Conta fixa') : TIPO_LABEL[item.tipo];
+    const progress = item.totalParcelas ? `${item.parcelasPagas || 0}/${item.totalParcelas} parcelas` : '';
+    const contemplado = item.tipo === 'consorcio' && item.contemplado ? ' · contemplado' : '';
+    const canUndo = item._prevUltimoPagamento !== undefined;
+    return `
+      <div class="fc-row" data-id="${item.id}">
+        <div>
+          <div class="fc-row-name">${escapeHtml(item.nome)}</div>
+          <div class="fc-row-tag">${escapeHtml(tag)}${contemplado}</div>
+        </div>
+        <div class="fc-row-value">${fmtMoney(item.valorParcela)}</div>
+        <div class="fc-row-progress">${progress}</div>
+        <div class="fc-due">
+          <span class="fc-stamp ${info.status}">${stampLabel(info.status)}</span>
+          <span class="fc-due-text">${dueText(info)}</span>
+        </div>
+        <div class="fc-row-actions">
+          ${info.status !== 'done' ? `<button class="fc-icon-btn" data-action="pay" title="Marcar como pago">✓</button>` : ''}
+          ${canUndo ? `<button class="fc-icon-btn" data-action="undo" title="Desfazer último pagamento">↺</button>` : ''}
+          <button class="fc-icon-btn" data-action="edit" title="Editar">✎</button>
+          <button class="fc-icon-btn danger" data-action="delete" title="Excluir">🗑</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function renderList() {
+    const groups = [
+      { key: 'conta', title: 'Contas fixas', items: [] },
+      { key: 'credito', title: 'Financiamentos & Empréstimos', items: [] },
+      { key: 'consorcio', title: 'Consórcios', items: [] }
+    ];
+    items.filter(matchesTab).forEach(i => {
+      const g = i.tipo === 'conta' ? groups[0] : (i.tipo === 'consorcio' ? groups[2] : groups[1]);
+      g.items.push(i);
+    });
+
+    const el = document.getElementById('fcList');
+    let visibleItemsCount = 0;
+
+    const html = groups.map(g => {
+      let list = g.items
+        .map(i => ({ item: i, info: getStatus(i) }))
+        .filter(x => showDone || x.info.status !== 'done')
+        .sort((a, b) => {
+          const da = a.info.status === 'done' ? Infinity : a.info.diffDays;
+          const db = b.info.status === 'done' ? Infinity : b.info.diffDays;
+          return da - db;
+        });
+      if (!list.length) return '';
+      visibleItemsCount += list.length;
+      return `
+        <div class="fc-group">
+          <div class="fc-group-title">${g.title}</div>
+          ${list.map(x => rowHtml(x.item)).join('')}
+        </div>
+      `;
+    }).join('');
+
+    if (!visibleItemsCount) {
+      el.innerHTML = `
+        <div class="fc-empty">
+          <p>${items.length ? 'Nada por aqui com esse filtro.' : 'Nenhum lançamento ainda. Adicione sua primeira conta, financiamento ou consórcio.'}</p>
+          <button class="fc-btn-primary" id="fcEmptyAdd">+ Novo lançamento</button>
+        </div>
+      `;
+      const btn = document.getElementById('fcEmptyAdd');
+      if (btn) btn.addEventListener('click', () => openModal());
+    } else {
+      el.innerHTML = html;
+    }
+  }
+
+  function render() {
+    renderSummary();
+    renderTabs();
+    renderList();
+  }
+
+  // ---- Modal ----
+  function openModal(item = null) {
+    editingId = item ? item.id : null;
+    document.getElementById('fcFormTitle').textContent = item ? 'Editar lançamento' : 'Novo lançamento';
+    document.getElementById('fcTipo').value = item ? item.tipo : 'conta';
+    document.getElementById('fcNome').value = item ? item.nome : '';
+    document.getElementById('fcCategoria').value = item ? (item.categoria || '') : '';
+    document.getElementById('fcValor').value = item ? item.valorParcela : '';
+    document.getElementById('fcDia').value = item ? item.diaVencimento : '';
+    document.getElementById('fcTotalParcelas').value = item && item.totalParcelas ? item.totalParcelas : '';
+    document.getElementById('fcParcelasPagas').value = item ? (item.parcelasPagas || 0) : 0;
+    document.getElementById('fcContemplado').checked = !!(item && item.contemplado);
+    document.getElementById('fcObs').value = item ? (item.observacao || '') : '';
+    document.getElementById('fcErrorMsg').textContent = '';
+    toggleFormFields();
+    document.getElementById('fcOverlay').hidden = false;
+  }
+
+  function closeModal() {
+    document.getElementById('fcOverlay').hidden = true;
+    editingId = null;
+  }
+
+  function toggleFormFields() {
+    const tipo = document.getElementById('fcTipo').value;
+    document.getElementById('fcCategoriaWrap').style.display = tipo === 'conta' ? '' : 'none';
+    document.getElementById('fcParcelasWrap').style.display = tipo === 'conta' ? 'none' : '';
+    document.getElementById('fcContempladoWrap').style.display = tipo === 'consorcio' ? '' : 'none';
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const tipo = document.getElementById('fcTipo').value;
+    const nome = document.getElementById('fcNome').value.trim();
+    const valorParcela = parseFloat(document.getElementById('fcValor').value);
+    const diaVencimento = parseInt(document.getElementById('fcDia').value, 10);
+    const totalParcelas = tipo === 'conta' ? null : parseInt(document.getElementById('fcTotalParcelas').value, 10) || null;
+    const parcelasPagas = tipo === 'conta' ? 0 : (parseInt(document.getElementById('fcParcelasPagas').value, 10) || 0);
+    const contemplado = document.getElementById('fcContemplado').checked;
+    const observacao = document.getElementById('fcObs').value.trim();
+    const categoria = document.getElementById('fcCategoria').value.trim();
+
+    const errEl = document.getElementById('fcErrorMsg');
+    if (!nome) return errEl.textContent = 'Informe um nome para o lançamento.';
+    if (!(valorParcela > 0)) return errEl.textContent = 'Informe um valor de parcela válido.';
+    if (!(diaVencimento >= 1 && diaVencimento <= 31)) return errEl.textContent = 'O dia do vencimento deve ser entre 1 e 31.';
+    if (tipo !== 'conta') {
+      if (!(totalParcelas > 0)) return errEl.textContent = 'Informe o total de parcelas.';
+      if (parcelasPagas > totalParcelas) return errEl.textContent = 'Parcelas pagas não pode ser maior que o total.';
+    }
+
+    if (editingId) {
+      const item = items.find(i => i.id === editingId);
+      Object.assign(item, { tipo, nome, categoria, valorParcela, diaVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
+    } else {
+      items.push({
+        id: uid(), tipo, nome, categoria, valorParcela, diaVencimento,
+        totalParcelas, parcelasPagas, contemplado, observacao,
+        ultimoPagamento: null
+      });
+    }
+    saveData();
+    closeModal();
+    render();
+  }
+
+  function handleListClick(e) {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const row = e.target.closest('.fc-row');
+    const id = row.dataset.id;
+    const item = items.find(i => i.id === id);
+    const action = btn.dataset.action;
+
+    if (action === 'pay') {
+      const due = getNextDue(item);
+      item._prevUltimoPagamento = item.ultimoPagamento;
+      item._prevParcelasPagas = item.parcelasPagas;
+      item.ultimoPagamento = cycleOf(due);
+      if (item.totalParcelas) item.parcelasPagas = Math.min(item.totalParcelas, (item.parcelasPagas || 0) + 1);
+      saveData(); render();
+    } else if (action === 'undo') {
+      if (item._prevUltimoPagamento !== undefined) {
+        item.ultimoPagamento = item._prevUltimoPagamento;
+        item.parcelasPagas = item._prevParcelasPagas;
+        delete item._prevUltimoPagamento;
+        delete item._prevParcelasPagas;
+        saveData(); render();
+      }
+    } else if (action === 'edit') {
+      openModal(item);
+    } else if (action === 'delete') {
+      if (confirm(`Excluir "${item.nome}"?`)) {
+        items = items.filter(i => i.id !== id);
+        saveData(); render();
+      }
+    }
+  }
+
+  function init() {
+    document.getElementById('fcBtnAdd').addEventListener('click', () => openModal());
+    document.getElementById('fcCancel').addEventListener('click', closeModal);
+    document.getElementById('fcOverlay').addEventListener('click', e => { if (e.target.id === 'fcOverlay') closeModal(); });
+    document.getElementById('fcForm').addEventListener('submit', handleSubmit);
+    document.getElementById('fcTipo').addEventListener('change', toggleFormFields);
+    document.getElementById('fcList').addEventListener('click', handleListClick);
+    document.getElementById('fcTabs').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-tab]');
+      if (!btn) return;
+      activeTab = btn.dataset.tab;
+      render();
+    });
+    document.getElementById('fcShowDone').addEventListener('change', e => {
+      showDone = e.target.checked;
+      render();
+    });
+
+    document.getElementById('fcBtnExport').addEventListener('click', exportData);
+    document.getElementById('fcBtnImport').addEventListener('click', () => document.getElementById('fcImportFile').click());
+    document.getElementById('fcImportFile').addEventListener('change', e => {
+      if (e.target.files[0]) importData(e.target.files[0]);
+      e.target.value = '';
+    });
+
+    document.getElementById('fcLockSubmit').addEventListener('click', handleLockSubmit);
+    document.getElementById('fcLockSecondary').addEventListener('click', handleLockSecondary);
+    document.getElementById('fcLockForgot').addEventListener('click', handleForgot);
+    document.getElementById('fcBtnLock').addEventListener('click', () => openLock('enter'));
+    document.getElementById('fcBtnPinSettings').addEventListener('click', () => openLock(hasActivePin() ? 'change' : 'create'));
+    ['fcLockCurrent', 'fcLockMain', 'fcLockConfirm'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); handleLockSubmit(); }
+      });
+    });
+
+    loadData().then(render);
+    initLock();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
