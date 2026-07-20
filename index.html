@@ -91,6 +91,7 @@
   .ff-overlay { position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 60; padding: 16px; display: flex; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
   .ff-overlay[hidden] { display: none; }
   #lockOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
+  #userOverlay { background: var(--bg); backdrop-filter: none; z-index: 90; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
   .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
   .ff-modal h2 { font-size: 1.05rem; margin: 0 0 14px; }
   .ff-field { margin-bottom: 12px; }
@@ -126,6 +127,20 @@
   }
 </style>
 
+<div class="ff-overlay" id="userOverlay" hidden>
+  <div class="ff-lock-card">
+    <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
+    <h2>Quem é você?</h2>
+    <p class="ff-lock-sub">Só pra identificar quem fez o quê. Fica salvo neste navegador — não é uma senha.</p>
+    <div class="ff-field">
+      <label>Seu nome</label>
+      <input type="text" id="userNameInput" placeholder="Ex: Você ou Esposa" maxlength="30">
+    </div>
+    <div class="ff-error" id="userError"></div>
+    <button class="ff-btn ff-btn-primary" id="userSubmit" type="button" style="width:100%;">Entrar</button>
+  </div>
+</div>
+
 <div class="ff-overlay" id="lockOverlay">
   <div class="ff-lock-card">
     <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
@@ -155,7 +170,10 @@
 <div class="ff-app">
   <div class="ff-wrap">
     <div class="ff-topbar">
-      <p class="ff-brand-title">Nossas finanças</p>
+      <div>
+        <p class="ff-brand-title">Nossas finanças</p>
+        <p id="userGreeting" style="font-size:.74rem;color:var(--text-soft);margin:2px 0 0;"></p>
+      </div>
       <div class="ff-topbar-actions">
         <button class="ff-btn-icon" id="btnSettings" title="Configurações">⚙️</button>
         <button class="ff-btn ff-btn-primary" id="btnAdd">+ Adicionar</button>
@@ -276,6 +294,13 @@
 <div class="ff-overlay" id="settingsOverlay" hidden>
   <div class="ff-modal">
     <h2>Configurações</h2>
+    <div class="ff-settings-row">
+      <div>
+        <div class="ff-settings-label" id="logoutRowLabel">Você está como: —</div>
+        <div class="ff-settings-sub">Esquece seu nome neste navegador.</div>
+      </div>
+      <button class="ff-btn ff-btn-ghost" id="btnLogout">Sair</button>
+    </div>
     <div class="ff-settings-row">
       <div>
         <div class="ff-settings-label" id="pinRowLabel">Definir PIN</div>
@@ -711,7 +736,57 @@
     document.getElementById('lockOverlay').style.display = 'flex';
     setTimeout(() => document.getElementById(mode === 'change' ? 'lockCurrent' : 'lockMain').focus(), 0);
   }
-  function closeLock() { document.getElementById('lockOverlay').style.display = 'none'; lockMode = null; }
+  // ---- Passwordless name tag (not real auth — just identifies who's using it) ----
+  const USER_KEY = 'ff-user-name';
+  let currentUserName = null;
+
+  async function loadUserName() {
+    try { const res = await window.storage.get(USER_KEY, false); currentUserName = res && res.value ? res.value : null; }
+    catch (e) { currentUserName = null; }
+  }
+  async function saveUserName(name) {
+    currentUserName = name;
+    try { await window.storage.set(USER_KEY, name, false); } catch (e) { console.error(e); }
+  }
+  async function clearUserName() {
+    currentUserName = null;
+    try { await window.storage.delete(USER_KEY, false); } catch (e) { console.error(e); }
+  }
+  function updateUserUI() {
+    const greeting = document.getElementById('userGreeting');
+    if (greeting) greeting.textContent = currentUserName ? `Olá, ${currentUserName} 👋` : '';
+    const logoutLabel = document.getElementById('logoutRowLabel');
+    if (logoutLabel) logoutLabel.textContent = currentUserName ? `Você está como: ${currentUserName}` : 'Nenhum nome definido';
+  }
+  function openUserScreen() {
+    document.getElementById('userError').textContent = '';
+    document.getElementById('userNameInput').value = '';
+    document.getElementById('userOverlay').hidden = false;
+    setTimeout(() => document.getElementById('userNameInput').focus(), 0);
+  }
+  function closeUserScreen() { document.getElementById('userOverlay').hidden = true; }
+  async function handleUserSubmit() {
+    const name = document.getElementById('userNameInput').value.trim();
+    if (!name) { document.getElementById('userError').textContent = 'Digite um nome.'; return; }
+    await saveUserName(name);
+    updateUserUI();
+    closeUserScreen();
+  }
+  async function initUser() {
+    await loadUserName();
+    updateUserUI();
+    if (!currentUserName) openUserScreen();
+  }
+  function handleLogout() {
+    if (confirm('Sair? Vai pedir seu nome de novo da próxima vez que abrir.')) {
+      clearUserName();
+      updateUserUI();
+      document.getElementById('settingsOverlay').hidden = true;
+      openUserScreen();
+    }
+  }
+
+  function closeLock() { document.getElementById('lockOverlay').style.display = 'none'; lockMode = null; initUser(); }
   async function handleLockSubmit() {
     const errEl = document.getElementById('lockError'); errEl.textContent = '';
     const currentVal = document.getElementById('lockCurrent').value.trim();
@@ -802,6 +877,10 @@
     ['lockCurrent', 'lockMain', 'lockConfirm'].forEach(id => {
       document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleLockSubmit(); } });
     });
+
+    document.getElementById('userSubmit').addEventListener('click', handleUserSubmit);
+    document.getElementById('userNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleUserSubmit(); } });
+    document.getElementById('btnLogout').addEventListener('click', handleLogout);
 
     toggleFormFields();
     loadData().then(renderAll);
