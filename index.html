@@ -1,5 +1,13 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nossas Finanças</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  html, body { margin: 0; padding: 0; background: #fafaf9; min-height: 100vh; }
 
   :root {
     --bg: #fafaf9;
@@ -110,6 +118,7 @@
   .ff-delete-link { background: none; border: none; color: var(--danger); font-weight: 600; font-size: .8rem; cursor: pointer; }
 
   .ff-settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .ff-settings-row[hidden] { display: none; }
   .ff-settings-row:last-child { border-bottom: none; }
   .ff-settings-label { font-size: .86rem; font-weight: 600; }
   .ff-settings-sub { font-size: .74rem; color: var(--text-soft); margin-top: 2px; }
@@ -120,12 +129,16 @@
   .ff-lock-actions { display: flex; gap: 10px; margin-top: 4px; }
   .ff-lock-actions button { flex: 1; }
   .ff-lock-link { display: block; width: 100%; margin: 14px 0 0; background: none; border: none; color: var(--primary); font-size: .8rem; font-weight: 700; cursor: pointer; text-align: center; }
+  .ff-lock-link[hidden] { display: none; }
 
   @media (max-width: 480px) {
     .ff-field-row { grid-template-columns: 1fr; }
     .ff-hero-value { font-size: 1.9rem; }
   }
 </style>
+</head>
+<body>
+
 
 <div class="ff-overlay" id="userOverlay" hidden>
   <div class="ff-lock-card">
@@ -336,6 +349,25 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+  // ====================================================================
+  // COLE AQUI a configuração do SEU projeto Firebase (veja o passo a passo
+  // que te mandei — Configurações do projeto > Seus apps > ícone </>).
+  // ====================================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyAOpm4-OkBelk3oElT55Tm3jx1E34CYcF0",
+    authDomain: "financaspessoais-92164.firebaseapp.com",
+    databaseURL: "https://financaspessoais-92164-default-rtdb.firebaseio.com",
+    projectId: "financaspessoais-92164",
+    storageBucket: "financaspessoais-92164.firebasestorage.app",
+    messagingSenderId: "261263856158",
+    appId: "1:261263856158:web:47652fa99b7df0da4cd40f"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+</script>
 <script>
 (function () {
   const STORAGE_KEY = 'ff-items';
@@ -367,15 +399,16 @@
   calYear = now.getFullYear();
   calMonth = now.getMonth();
 
-  // ---- Data (shared storage) ----
-  async function loadData() {
-    try {
-      const res = await window.storage.get(STORAGE_KEY, true);
-      items = res && res.value ? JSON.parse(res.value) : [];
-    } catch (e) { items = []; }
+  // ---- Data (Firebase Realtime Database — synced live between devices) ----
+  function startDataSync() {
+    db.ref(STORAGE_KEY).on('value', snapshot => {
+      const val = snapshot.val();
+      try { items = val ? JSON.parse(val) : []; } catch (e) { items = []; }
+      renderAll();
+    });
   }
-  async function saveData() {
-    try { await window.storage.set(STORAGE_KEY, JSON.stringify(items), true); }
+  function saveData() {
+    try { db.ref(STORAGE_KEY).set(JSON.stringify(items)); }
     catch (e) { console.error('Erro ao salvar', e); }
   }
   function exportData() {
@@ -691,16 +724,18 @@
     }
   }
 
-  // ---- PIN lock ----
+  // ---- PIN lock (synced via Firebase — same PIN on every device) ----
   let savedPin = null;
   let lockMode = null;
   async function loadPin() {
-    try { const res = await window.storage.get(PIN_KEY, true); savedPin = res && res.value ? res.value : null; }
-    catch (e) { savedPin = null; }
+    try {
+      const snapshot = await db.ref(PIN_KEY).once('value');
+      savedPin = snapshot.val();
+    } catch (e) { savedPin = null; }
   }
   async function savePinValue(v) {
     savedPin = v;
-    try { await window.storage.set(PIN_KEY, v, true); } catch (e) { console.error(e); }
+    try { await db.ref(PIN_KEY).set(v); } catch (e) { console.error(e); }
   }
   function hasActivePin() { return !!savedPin && savedPin !== '__no_pin__'; }
   function updatePinUI() {
@@ -741,16 +776,16 @@
   let currentUserName = null;
 
   async function loadUserName() {
-    try { const res = await window.storage.get(USER_KEY, false); currentUserName = res && res.value ? res.value : null; }
+    try { currentUserName = localStorage.getItem(USER_KEY); }
     catch (e) { currentUserName = null; }
   }
   async function saveUserName(name) {
     currentUserName = name;
-    try { await window.storage.set(USER_KEY, name, false); } catch (e) { console.error(e); }
+    try { localStorage.setItem(USER_KEY, name); } catch (e) { console.error(e); }
   }
   async function clearUserName() {
     currentUserName = null;
-    try { await window.storage.delete(USER_KEY, false); } catch (e) { console.error(e); }
+    try { localStorage.removeItem(USER_KEY); } catch (e) { console.error(e); }
   }
   function updateUserUI() {
     const greeting = document.getElementById('userGreeting');
@@ -883,10 +918,12 @@
     document.getElementById('btnLogout').addEventListener('click', handleLogout);
 
     toggleFormFields();
-    loadData().then(renderAll);
+    startDataSync();
     initLock();
   }
 
   init();
 })();
 </script>
+</body>
+</html>
