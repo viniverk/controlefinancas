@@ -1,8 +1,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-  .ff-app, .ff-app * { box-sizing: border-box; }
-  .ff-app {
+  :root {
     --bg: #fafaf9;
     --surface: #ffffff;
     --border: #ececea;
@@ -14,6 +13,9 @@
     --danger: #d64545;
     --warn: #e0a83d;
     --done: #b7beb8;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  .ff-app {
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
     background: var(--bg);
@@ -86,9 +88,9 @@
   .ff-day-detail h4 { font-weight: 700; font-size: .84rem; margin: 0 0 4px; text-transform: capitalize; color: var(--text-soft); }
 
   /* Modal */
-  .ff-overlay { position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 60; padding: 16px; display: flex; }
+  .ff-overlay { position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 60; padding: 16px; display: flex; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
   .ff-overlay[hidden] { display: none; }
-  #lockOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; }
+  #lockOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
   .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
   .ff-modal h2 { font-size: 1.05rem; margin: 0 0 14px; }
   .ff-field { margin-bottom: 12px; }
