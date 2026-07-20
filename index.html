@@ -1,130 +1,96 @@
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
   .ff-app, .ff-app * { box-sizing: border-box; }
   .ff-app {
-    --bg: #f5f6f8;
+    --bg: #fafaf9;
     --surface: #ffffff;
-    --border: #e3e6ea;
-    --text: #1c2333;
-    --text-soft: #697386;
+    --border: #ececea;
+    --text: #1f2320;
+    --text-soft: #8a8f87;
     --primary: #2f6f5e;
     --primary-hover: #245a4c;
     --receita: #2f9e6e;
-    --receita-soft: #e7f6ef;
-    --danger: #e2534e;
-    --danger-soft: #fceaea;
-    --warn: #d99a2b;
-    --warn-soft: #fdf3e1;
-    --neutral-soft: #eef0f3;
-    --done: #98a2b3;
+    --danger: #d64545;
+    --warn: #e0a83d;
+    --done: #b7beb8;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
     background: var(--bg);
     border-radius: 16px;
-    padding: 20px;
+    padding: 24px 20px;
     min-height: 100%;
   }
-  .ff-h { font-family: 'Manrope', sans-serif; font-weight: 700; }
+  .ff-wrap { max-width: 640px; margin: 0 auto; }
 
-  .ff-wrap { max-width: 920px; margin: 0 auto; }
+  .ff-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .ff-brand-title { font-weight: 800; font-size: 1.2rem; margin: 0; }
+  .ff-topbar-actions { display: flex; gap: 8px; }
 
-  .ff-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-  .ff-brand-title { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 1.4rem; margin: 0; }
-  .ff-brand-sub { color: var(--text-soft); font-size: .85rem; margin: 2px 0 0; }
-  .ff-topbar-actions { display: flex; gap: 8px; align-items: center; }
-
-  .ff-btn { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: .85rem; border-radius: 10px; padding: 10px 16px; cursor: pointer; border: none; }
+  .ff-btn { font-weight: 700; font-size: .84rem; border-radius: 10px; padding: 9px 15px; cursor: pointer; border: none; }
   .ff-btn-primary { background: var(--primary); color: #fff; }
   .ff-btn-primary:hover { background: var(--primary-hover); }
-  .ff-btn-ghost { background: var(--neutral-soft); color: var(--text); }
-  .ff-btn-ghost:hover { background: #e2e5ea; }
-  .ff-btn-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
-  .ff-btn-icon:hover { background: var(--neutral-soft); }
+  .ff-btn-ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .ff-btn-ghost:hover { background: var(--border); }
+  .ff-btn-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+  .ff-btn-icon:hover { background: var(--bg); }
 
-  .ff-tabs { display: flex; gap: 4px; background: var(--neutral-soft); padding: 4px; border-radius: 12px; margin-bottom: 18px; width: fit-content; }
-  .ff-tab { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: .82rem; padding: 8px 16px; border-radius: 9px; border: none; background: transparent; color: var(--text-soft); cursor: pointer; }
-  .ff-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(20,20,20,.08); }
+  .ff-tabs { display: flex; gap: 2px; background: var(--border); padding: 3px; border-radius: 11px; margin-bottom: 20px; }
+  .ff-tab { flex: 1; font-weight: 700; font-size: .8rem; padding: 8px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-soft); cursor: pointer; }
+  .ff-tab.active { background: var(--surface); color: var(--text); }
 
-  .ff-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-  .ff-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
-  .ff-card-label { font-size: .74rem; color: var(--text-soft); font-weight: 600; }
-  .ff-card-value { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 1.25rem; margin-top: 4px; }
-  .ff-card-value.receita { color: var(--receita); }
-  .ff-card-value.despesa { color: var(--danger); }
-  .ff-card-sub { font-size: .74rem; color: var(--text-soft); margin-top: 2px; }
+  .ff-hero { text-align: center; padding: 22px 10px 26px; }
+  .ff-hero-label { font-size: .8rem; color: var(--text-soft); font-weight: 600; }
+  .ff-hero-value { font-weight: 800; font-size: 2.4rem; margin: 4px 0 6px; letter-spacing: -.02em; }
+  .ff-hero-sub { font-size: .82rem; color: var(--text-soft); }
+  .ff-hero-sub .warn-text { color: var(--danger); font-weight: 700; }
 
-  .ff-section-title { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: .95rem; margin: 22px 0 10px; }
-  .ff-empty-note { background: var(--surface); border: 1px dashed var(--border); border-radius: 14px; padding: 22px; text-align: center; color: var(--text-soft); font-size: .88rem; }
+  .ff-section-title { font-weight: 700; font-size: .84rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .03em; margin: 22px 0 8px; }
+  .ff-empty-note { text-align: center; color: var(--text-soft); font-size: .86rem; padding: 26px 10px; }
 
-  .ff-item-row {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--neutral-soft);
-    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
-  }
-  .ff-item-row.st-overdue { border-left-color: var(--danger); }
-  .ff-item-row.st-soon { border-left-color: var(--warn); }
-  .ff-item-row.st-ok { border-left-color: var(--border); }
-  .ff-item-row.st-done { border-left-color: var(--done); opacity: .75; }
+  .ff-row { display: flex; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .ff-row:last-child { border-bottom: none; }
+  .ff-row:hover { background: var(--bg); }
+  .ff-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ff-dot.overdue { background: var(--danger); }
+  .ff-dot.soon { background: var(--warn); }
+  .ff-dot.ok { background: #c7ccc4; }
+  .ff-dot.scheduled { background: #dde1da; }
+  .ff-dot.done { background: var(--receita); }
+  .ff-row-body { flex: 1; min-width: 0; }
+  .ff-row-name { font-weight: 600; font-size: .9rem; }
+  .ff-row-sub { font-size: .76rem; color: var(--text-soft); margin-top: 1px; }
+  .ff-row-value { font-weight: 700; font-size: .9rem; white-space: nowrap; }
+  .ff-row-value.receita { color: var(--receita); }
+  .ff-row-check { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: .82rem; flex-shrink: 0; }
+  .ff-row-check:hover { background: var(--receita); color: #fff; border-color: var(--receita); }
 
-  .ff-item-main { flex: 1; min-width: 0; }
-  .ff-item-name { font-weight: 700; font-size: .92rem; }
-  .ff-item-tag { font-size: .74rem; color: var(--text-soft); margin-top: 2px; }
-  .ff-item-value { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: .92rem; white-space: nowrap; }
-  .ff-item-value.receita { color: var(--receita); }
-  .ff-item-value.despesa { color: var(--text); }
-  .ff-item-progress { font-size: .72rem; color: var(--text-soft); white-space: nowrap; }
-
-  .ff-chip { display: inline-block; font-size: .7rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-  .ff-chip.overdue { background: var(--danger-soft); color: var(--danger); }
-  .ff-chip.soon { background: var(--warn-soft); color: var(--warn); }
-  .ff-chip.ok { background: var(--neutral-soft); color: var(--text-soft); }
-  .ff-chip.done { background: var(--receita-soft); color: var(--receita); }
-  .ff-item-due-text { font-size: .72rem; color: var(--text-soft); margin-top: 3px; }
-
-  .ff-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
-
-  .ff-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; justify-content: space-between; }
-  .ff-chips-row { display: flex; gap: 6px; flex-wrap: wrap; }
-  .ff-filter-chip { font-family: 'Manrope', sans-serif; font-size: .78rem; font-weight: 700; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text-soft); cursor: pointer; }
-  .ff-filter-chip.active { background: var(--text); color: #fff; border-color: var(--text); }
-  .ff-toggle { font-size: .8rem; color: var(--text-soft); display: flex; align-items: center; gap: 6px; }
+  .ff-list-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .ff-list-controls select { font-family: 'Inter', sans-serif; font-size: .82rem; font-weight: 600; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .ff-toggle { font-size: .78rem; color: var(--text-soft); display: flex; align-items: center; gap: 6px; margin-left: auto; }
 
   /* Calendar */
   .ff-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-  .ff-cal-month { font-family: 'Manrope', sans-serif; font-weight: 800; font-size: 1.1rem; text-transform: capitalize; }
-  .ff-cal-nav { display: flex; gap: 6px; }
-  .ff-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .ff-cal-weekday { text-align: center; font-size: .72rem; font-weight: 700; color: var(--text-soft); padding-bottom: 4px; }
-  .ff-cal-cell {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-    min-height: 62px; padding: 6px; cursor: pointer; position: relative;
-  }
-  .ff-cal-cell.outside { background: transparent; border-color: transparent; cursor: default; }
-  .ff-cal-cell.today { border-color: var(--primary); border-width: 2px; }
-  .ff-cal-cell.selected { background: var(--receita-soft); border-color: var(--primary); }
-  .ff-cal-daynum { font-size: .78rem; font-weight: 700; }
-  .ff-cal-cell.outside .ff-cal-daynum { color: #c7ccd3; }
-  .ff-cal-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-  .ff-dot { width: 7px; height: 7px; border-radius: 50%; }
-  .ff-dot.overdue { background: var(--danger); }
-  .ff-dot.soon { background: var(--warn); }
-  .ff-dot.ok { background: #b9c0cb; }
-  .ff-dot.scheduled { background: #d8dce2; }
-  .ff-dot.done { background: var(--receita); }
-  .ff-cal-more { font-size: .64rem; color: var(--text-soft); }
+  .ff-cal-month { font-weight: 800; font-size: 1rem; text-transform: capitalize; }
+  .ff-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .ff-cal-weekday { text-align: center; font-size: .68rem; font-weight: 700; color: var(--text-soft); padding-bottom: 4px; }
+  .ff-cal-cell { aspect-ratio: 1; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+  .ff-cal-cell.outside { cursor: default; }
+  .ff-cal-cell.outside .ff-cal-daynum { color: #d7dad3; }
+  .ff-cal-cell:not(.outside):hover { background: var(--bg); }
+  .ff-cal-cell.today .ff-cal-daynum { color: var(--primary); font-weight: 800; }
+  .ff-cal-cell.selected { background: var(--border); }
+  .ff-cal-daynum { font-size: .78rem; font-weight: 600; }
 
-  .ff-day-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-top: 16px; }
-  .ff-day-detail h4 { font-family: 'Manrope', sans-serif; margin: 0 0 10px; font-size: .95rem; text-transform: capitalize; }
+  .ff-day-detail { margin-top: 10px; }
+  .ff-day-detail h4 { font-weight: 700; font-size: .84rem; margin: 0 0 4px; text-transform: capitalize; color: var(--text-soft); }
 
   /* Modal */
-  .ff-overlay {
-    position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px);
-    display: flex; align-items: center; justify-content: center; z-index: 60; padding: 16px;
-  }
+  .ff-overlay { position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 60; padding: 16px; display: flex; }
   .ff-overlay[hidden] { display: none; }
-  .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 440px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
-  .ff-modal h2 { font-family: 'Manrope', sans-serif; font-size: 1.15rem; margin: 0 0 14px; }
+  #lockOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; }
+  .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  .ff-modal h2 { font-size: 1.05rem; margin: 0 0 14px; }
   .ff-field { margin-bottom: 12px; }
   .ff-field label { display: block; font-size: .76rem; font-weight: 700; color: var(--text-soft); margin-bottom: 4px; }
   .ff-field input, .ff-field select, .ff-field textarea {
@@ -135,36 +101,32 @@
   .ff-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .ff-check { display: flex; align-items: center; gap: 8px; font-size: .84rem; }
   .ff-check input { width: auto; }
-  .ff-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+  .ff-modal-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 16px; }
   .ff-error { color: var(--danger); font-size: .78rem; margin-top: 8px; min-height: 1em; }
-  .ff-natureza-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
-  .ff-natureza-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font-family: 'Manrope', sans-serif; font-weight: 700; font-size: .82rem; cursor: pointer; color: var(--text-soft); }
-  .ff-natureza-btn.active[data-nat="despesa"] { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
-  .ff-natureza-btn.active[data-nat="receita"] { background: var(--receita-soft); color: var(--receita); border-color: var(--receita); }
+  .ff-link { background: none; border: none; color: var(--primary); font-weight: 700; font-size: .8rem; cursor: pointer; padding: 4px 0; margin-bottom: 8px; }
+  .ff-delete-link { background: none; border: none; color: var(--danger); font-weight: 600; font-size: .8rem; cursor: pointer; }
 
   .ff-settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .ff-settings-row:last-child { border-bottom: none; }
   .ff-settings-label { font-size: .86rem; font-weight: 600; }
   .ff-settings-sub { font-size: .74rem; color: var(--text-soft); margin-top: 2px; }
 
-  .ff-lock-card { background: var(--surface); border-radius: 16px; padding: 26px; width: 100%; max-width: 380px; }
-  .ff-lock-card h2 { font-family: 'Manrope', sans-serif; font-size: 1.2rem; margin: 4px 0 6px; }
-  .ff-lock-sub { font-size: .84rem; color: var(--text-soft); margin: 0 0 16px; line-height: 1.45; }
+  .ff-lock-card { background: var(--surface); border-radius: 16px; padding: 26px; width: 100%; max-width: 360px; }
+  .ff-lock-card h2 { font-size: 1.1rem; margin: 4px 0 6px; }
+  .ff-lock-sub { font-size: .82rem; color: var(--text-soft); margin: 0 0 16px; line-height: 1.45; }
   .ff-lock-actions { display: flex; gap: 10px; margin-top: 4px; }
   .ff-lock-actions button { flex: 1; }
   .ff-lock-link { display: block; width: 100%; margin: 14px 0 0; background: none; border: none; color: var(--primary); font-size: .8rem; font-weight: 700; cursor: pointer; text-align: center; }
 
-  @media (max-width: 640px) {
-    .ff-cards { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 480px) {
     .ff-field-row { grid-template-columns: 1fr; }
-    .ff-cal-cell { min-height: 50px; }
-    .ff-item-row { flex-wrap: wrap; }
+    .ff-hero-value { font-size: 1.9rem; }
   }
 </style>
 
 <div class="ff-overlay" id="lockOverlay">
   <div class="ff-lock-card">
-    <div class="ff-h" style="font-size:.72rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;">Nossas finanças</div>
+    <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
     <h2 id="lockTitle">Carregando…</h2>
     <p class="ff-lock-sub" id="lockSub">Só um instante.</p>
     <div class="ff-field" id="lockCurrentWrap" hidden>
@@ -191,10 +153,7 @@
 <div class="ff-app">
   <div class="ff-wrap">
     <div class="ff-topbar">
-      <div>
-        <p class="ff-brand-title ff-h">Nossas finanças</p>
-        <p class="ff-brand-sub">Compartilhado — você e sua esposa veem e editam tudo junto</p>
-      </div>
+      <p class="ff-brand-title">Nossas finanças</p>
       <div class="ff-topbar-actions">
         <button class="ff-btn-icon" id="btnSettings" title="Configurações">⚙️</button>
         <button class="ff-btn ff-btn-primary" id="btnAdd">+ Adicionar</button>
@@ -202,7 +161,7 @@
     </div>
 
     <nav class="ff-tabs">
-      <button class="ff-tab active" data-tab="overview">Visão geral</button>
+      <button class="ff-tab active" data-tab="overview">Início</button>
       <button class="ff-tab" data-tab="calendar">Calendário</button>
       <button class="ff-tab" data-tab="list">Lançamentos</button>
     </nav>
@@ -212,7 +171,7 @@
     <section id="panelCalendar" hidden>
       <div class="ff-cal-header">
         <button class="ff-btn-icon" id="calPrev">‹</button>
-        <div class="ff-cal-month ff-h" id="calMonthLabel"></div>
+        <div class="ff-cal-month" id="calMonthLabel"></div>
         <button class="ff-btn-icon" id="calNext">›</button>
       </div>
       <div class="ff-cal-grid" id="calGrid"></div>
@@ -220,8 +179,14 @@
     </section>
 
     <section id="panelList" hidden>
-      <div class="ff-filters">
-        <div class="ff-chips-row" id="listTabs"></div>
+      <div class="ff-list-controls">
+        <select id="listFilter">
+          <option value="todos">Todos</option>
+          <option value="conta">Contas</option>
+          <option value="credito">Financ. &amp; Empréstimos</option>
+          <option value="consorcio">Consórcios</option>
+          <option value="receita">Receitas</option>
+        </select>
         <label class="ff-toggle"><input type="checkbox" id="showDone"> mostrar concluídos</label>
       </div>
       <div id="listContent"></div>
@@ -233,24 +198,25 @@
   <form class="ff-modal" id="itemForm">
     <h2 id="formTitle">Novo lançamento</h2>
 
-    <div class="ff-natureza-toggle">
-      <button type="button" class="ff-natureza-btn active" data-nat="despesa" id="natDespesaBtn">💸 Despesa</button>
-      <button type="button" class="ff-natureza-btn" data-nat="receita" id="natReceitaBtn">💰 Receita</button>
-    </div>
-
     <div class="ff-field">
       <label>Tipo</label>
-      <select id="fTipo"></select>
+      <select id="fTipo">
+        <optgroup label="Despesas">
+          <option value="conta">Conta fixa</option>
+          <option value="financiamento">Financiamento</option>
+          <option value="emprestimo">Empréstimo</option>
+          <option value="consorcio">Consórcio</option>
+        </optgroup>
+        <optgroup label="Receitas">
+          <option value="salario">Salário</option>
+          <option value="renda_extra">Renda extra</option>
+        </optgroup>
+      </select>
     </div>
 
     <div class="ff-field">
       <label>Nome</label>
       <input id="fNome" type="text" placeholder="Ex: Financiamento do carro" required>
-    </div>
-
-    <div class="ff-field" id="fCategoriaWrap">
-      <label>Categoria</label>
-      <input id="fCategoria" type="text" placeholder="Ex: Moradia, Água, Internet">
     </div>
 
     <div class="ff-field-row">
@@ -264,31 +230,43 @@
       </div>
     </div>
 
-    <div class="ff-field-row" id="fParcelasWrap">
-      <div class="ff-field">
-        <label>Total de parcelas</label>
-        <input id="fTotalParcelas" type="number" min="1">
-      </div>
-      <div class="ff-field">
-        <label>Parcelas já pagas</label>
-        <input id="fParcelasPagas" type="number" min="0" value="0">
-      </div>
-    </div>
+    <button type="button" class="ff-link" id="toggleMore">+ Mais detalhes</button>
 
-    <div class="ff-field" id="fContempladoWrap">
-      <label class="ff-check"><input type="checkbox" id="fContemplado"> Já foi contemplado</label>
-    </div>
+    <div id="moreDetails" hidden>
+      <div class="ff-field" id="fCategoriaWrap">
+        <label>Categoria</label>
+        <input id="fCategoria" type="text" placeholder="Ex: Moradia, Água, Internet">
+      </div>
 
-    <div class="ff-field">
-      <label>Observação (opcional)</label>
-      <textarea id="fObs" rows="2" placeholder="Banco, número do contrato, etc."></textarea>
+      <div class="ff-field-row" id="fParcelasWrap">
+        <div class="ff-field">
+          <label>Total de parcelas</label>
+          <input id="fTotalParcelas" type="number" min="1">
+        </div>
+        <div class="ff-field">
+          <label>Parcelas já pagas</label>
+          <input id="fParcelasPagas" type="number" min="0" value="0">
+        </div>
+      </div>
+
+      <div class="ff-field" id="fContempladoWrap">
+        <label class="ff-check"><input type="checkbox" id="fContemplado"> Já foi contemplado</label>
+      </div>
+
+      <div class="ff-field">
+        <label>Observação</label>
+        <textarea id="fObs" rows="2" placeholder="Banco, número do contrato, etc."></textarea>
+      </div>
     </div>
 
     <div class="ff-error" id="formError"></div>
 
     <div class="ff-modal-actions">
-      <button type="button" class="ff-btn ff-btn-ghost" id="formCancel">Cancelar</button>
-      <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
+      <button type="button" class="ff-delete-link" id="formDelete" hidden>Excluir lançamento</button>
+      <div style="display:flex; gap:10px; margin-left:auto;">
+        <button type="button" class="ff-btn ff-btn-ghost" id="formCancel">Cancelar</button>
+        <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
+      </div>
     </div>
   </form>
 </div>
@@ -326,7 +304,7 @@
       <input type="file" id="importFile" accept="application/json" hidden>
     </div>
     <div class="ff-modal-actions">
-      <button type="button" class="ff-btn ff-btn-primary" id="settingsClose">Fechar</button>
+      <button type="button" class="ff-btn ff-btn-primary" id="settingsClose" style="margin-left:auto;">Fechar</button>
     </div>
   </div>
 </div>
@@ -337,10 +315,10 @@
   const PIN_KEY = 'ff-pin';
   let items = [];
   let editingId = null;
-  let activeListTab = 'todos';
+  let activeListFilter = 'todos';
   let showDone = false;
   let activeTab = 'overview';
-  let calYear, calMonth; // 0-indexed month for the calendar view
+  let calYear, calMonth;
   let selectedDay = null;
 
   const TIPOS = {
@@ -362,28 +340,23 @@
   calYear = now.getFullYear();
   calMonth = now.getMonth();
 
-  // ---- Data (shared storage: visible to whoever opens this artifact) ----
+  // ---- Data (shared storage) ----
   async function loadData() {
     try {
       const res = await window.storage.get(STORAGE_KEY, true);
       items = res && res.value ? JSON.parse(res.value) : [];
-    } catch (e) {
-      items = [];
-    }
+    } catch (e) { items = []; }
   }
   async function saveData() {
     try { await window.storage.set(STORAGE_KEY, JSON.stringify(items), true); }
     catch (e) { console.error('Erro ao salvar', e); }
   }
-
   function exportData() {
     const blob = new Blob([JSON.stringify({ items }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `financas-familia-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
+    a.href = url; a.download = `financas-familia-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
   function importData(file) {
     const reader = new FileReader();
@@ -399,9 +372,7 @@
         } else { items = incoming; }
         saveData(); renderAll();
         alert('Dados importados com sucesso.');
-      } catch (err) {
-        alert('Não consegui ler esse arquivo.');
-      }
+      } catch (err) { alert('Não consegui ler esse arquivo.'); }
     };
     reader.readAsText(file);
   }
@@ -410,9 +381,7 @@
   function getNextDue(item, ref = new Date()) {
     let y = ref.getFullYear(), m = ref.getMonth();
     const currentCycle = cycleOf(new Date(y, m, 1));
-    if (item.ultimoPagamento === currentCycle) {
-      m += 1; if (m > 11) { m = 0; y += 1; }
-    }
+    if (item.ultimoPagamento === currentCycle) { m += 1; if (m > 11) { m = 0; y += 1; } }
     const day = Math.min(item.diaVencimento, daysInMonth(y, m));
     return new Date(y, m, day);
   }
@@ -435,16 +404,25 @@
     if (info.diffDays === -1) return `${verbPast(nat)} há 1 dia`;
     return `${verbPast(nat)} há ${Math.abs(info.diffDays)} dias`;
   }
-  function chipLabel(nat, status) {
-    return {
-      ok: 'Em dia',
-      soon: nat === 'receita' ? 'Recebe em breve' : 'Vence em breve',
-      overdue: nat === 'receita' ? 'Não recebido' : 'Atrasado',
-      done: nat === 'receita' ? 'Recebido' : 'Quitado'
-    }[status];
+
+  // ---- Minimal row component ----
+  function rowHtml(item, info) {
+    const nat = TIPOS[item.tipo].natureza;
+    const tag = item.tipo === 'conta' ? (item.categoria || TIPOS[item.tipo].label) : TIPOS[item.tipo].label;
+    return `
+      <div class="ff-row" data-id="${item.id}">
+        <span class="ff-dot ${info.status}"></span>
+        <div class="ff-row-body">
+          <div class="ff-row-name">${escapeHtml(item.nome)}</div>
+          <div class="ff-row-sub">${escapeHtml(tag)} · ${dueText(nat, info)}</div>
+        </div>
+        <div class="ff-row-value ${nat}">${fmtMoney(item.valorParcela)}</div>
+        ${info.status !== 'done' ? `<button class="ff-row-check" data-action="pay" title="Marcar como ${nat === 'receita' ? 'recebido' : 'pago'}">✓</button>` : ''}
+      </div>
+    `;
   }
 
-  // ---- Overview tab ----
+  // ---- Overview ----
   function renderOverview() {
     const el = document.getElementById('panelOverview');
     const active = items.filter(i => getStatus(i).status !== 'done');
@@ -461,89 +439,30 @@
       .sort((a, b) => a.info.diffDays - b.info.diffDays);
 
     el.innerHTML = `
-      <div class="ff-cards">
-        <div class="ff-card">
-          <div class="ff-card-label">Receitas do mês</div>
-          <div class="ff-card-value receita">${fmtMoney(totalReceitas)}</div>
-          <div class="ff-card-sub">${receitas.length} lançamento${receitas.length === 1 ? '' : 's'}</div>
-        </div>
-        <div class="ff-card">
-          <div class="ff-card-label">Despesas do mês</div>
-          <div class="ff-card-value despesa">${fmtMoney(totalDespesas)}</div>
-          <div class="ff-card-sub">${despesas.length} lançamento${despesas.length === 1 ? '' : 's'}</div>
-        </div>
-        <div class="ff-card">
-          <div class="ff-card-label">Saldo previsto</div>
-          <div class="ff-card-value" style="color:${saldo >= 0 ? 'var(--receita)' : 'var(--danger)'}">${fmtMoney(saldo)}</div>
-          <div class="ff-card-sub">receitas − despesas</div>
-        </div>
-        <div class="ff-card">
-          <div class="ff-card-label">Pendências</div>
-          <div class="ff-card-value" style="color:${overdueCount ? 'var(--danger)' : 'var(--text)'}">${overdueCount}</div>
-          <div class="ff-card-sub">precisam de atenção</div>
-        </div>
+      <div class="ff-hero">
+        <div class="ff-hero-label">Saldo previsto do mês</div>
+        <div class="ff-hero-value" style="color:${saldo >= 0 ? 'var(--primary)' : 'var(--danger)'}">${fmtMoney(saldo)}</div>
+        <div class="ff-hero-sub">Receitas ${fmtMoney(totalReceitas)} · Despesas ${fmtMoney(totalDespesas)}${overdueCount ? ` · <span class="warn-text">${overdueCount} em atraso</span>` : ''}</div>
       </div>
       <div class="ff-section-title">Precisa de atenção</div>
       <div id="attentionList"></div>
     `;
-
     const listEl = document.getElementById('attentionList');
-    if (!attention.length) {
-      listEl.innerHTML = `<div class="ff-empty-note">Tudo em dia por aqui. 🎉</div>`;
-    } else {
-      listEl.innerHTML = attention.map(x => itemRowHtml(x.item, x.info)).join('');
-    }
-  }
-
-  function itemRowHtml(item, info) {
-    const nat = TIPOS[item.tipo].natureza;
-    const tag = item.tipo === 'conta' ? (item.categoria || TIPOS[item.tipo].label) : TIPOS[item.tipo].label;
-    const progress = item.totalParcelas ? `${item.parcelasPagas || 0}/${item.totalParcelas}` : '';
-    const contemplado = item.tipo === 'consorcio' && item.contemplado ? ' · contemplado' : '';
-    return `
-      <div class="ff-item-row st-${info.status}" data-id="${item.id}">
-        <div class="ff-item-main">
-          <div class="ff-item-name">${nat === 'receita' ? '💰 ' : ''}${escapeHtml(item.nome)}</div>
-          <div class="ff-item-tag">${escapeHtml(tag)}${contemplado}</div>
-        </div>
-        ${progress ? `<div class="ff-item-progress">${progress} parcelas</div>` : ''}
-        <div style="text-align:right;">
-          <div class="ff-item-value ${nat}">${fmtMoney(item.valorParcela)}</div>
-          <div class="ff-item-due-text">${dueText(nat, info)}</div>
-        </div>
-        <span class="ff-chip ${info.status}">${chipLabel(nat, info.status)}</span>
-        <div class="ff-item-actions">
-          ${info.status !== 'done' ? `<button class="ff-btn-icon" data-action="pay" title="Marcar como ${nat === 'receita' ? 'recebido' : 'pago'}">✓</button>` : ''}
-          <button class="ff-btn-icon" data-action="edit" title="Editar">✎</button>
-          <button class="ff-btn-icon" data-action="delete" title="Excluir">🗑</button>
-        </div>
-      </div>
-    `;
+    listEl.innerHTML = attention.length
+      ? attention.map(x => rowHtml(x.item, x.info)).join('')
+      : `<div class="ff-empty-note">Tudo em dia por aqui. 🎉</div>`;
   }
 
   // ---- List tab ----
-  function renderListTabs() {
-    const tabs = [
-      { id: 'todos', label: 'Todos' },
-      { id: 'conta', label: 'Contas' },
-      { id: 'credito', label: 'Financ. & Empréstimos' },
-      { id: 'consorcio', label: 'Consórcios' },
-      { id: 'receita', label: 'Receitas' }
-    ];
-    document.getElementById('listTabs').innerHTML = tabs.map(t =>
-      `<button class="ff-filter-chip ${activeListTab === t.id ? 'active' : ''}" data-list-tab="${t.id}">${t.label}</button>`
-    ).join('');
-  }
-  function matchesListTab(item) {
-    if (activeListTab === 'todos') return true;
-    if (activeListTab === 'credito') return item.tipo === 'financiamento' || item.tipo === 'emprestimo';
-    if (activeListTab === 'receita') return TIPOS[item.tipo].natureza === 'receita';
-    return item.tipo === activeListTab;
+  function matchesFilter(item) {
+    if (activeListFilter === 'todos') return true;
+    if (activeListFilter === 'credito') return item.tipo === 'financiamento' || item.tipo === 'emprestimo';
+    if (activeListFilter === 'receita') return TIPOS[item.tipo].natureza === 'receita';
+    return item.tipo === activeListFilter;
   }
   function renderList() {
-    renderListTabs();
     const rows = items
-      .filter(matchesListTab)
+      .filter(matchesFilter)
       .map(i => ({ item: i, info: getStatus(i) }))
       .filter(x => showDone || x.info.status !== 'done')
       .sort((a, b) => {
@@ -555,45 +474,36 @@
     if (!rows.length) {
       el.innerHTML = `
         <div class="ff-empty-note">
-          <p style="margin:0 0 12px;">${items.length ? 'Nada por aqui com esse filtro.' : 'Nenhum lançamento ainda. Adicione contas, empréstimos, salário ou renda extra.'}</p>
+          <p style="margin:0 0 12px;">${items.length ? 'Nada por aqui com esse filtro.' : 'Nenhum lançamento ainda.'}</p>
           <button class="ff-btn ff-btn-primary" id="listEmptyAdd">+ Adicionar</button>
         </div>`;
       const b = document.getElementById('listEmptyAdd');
       if (b) b.addEventListener('click', () => openItemModal());
     } else {
-      el.innerHTML = rows.map(x => itemRowHtml(x.item, x.info)).join('');
+      el.innerHTML = rows.map(x => rowHtml(x.item, x.info)).join('');
     }
   }
 
-  // ---- Calendar tab ----
+  // ---- Calendar ----
   const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const STATUS_RANK = { overdue: 0, soon: 1, ok: 2, scheduled: 3, done: 4 };
 
   function occurrenceForMonth(item, y, m) {
-    // Returns { date, status } for this item's occurrence in the given displayed month, or null if none.
-    const nat = TIPOS[item.tipo].natureza;
     const nextDue = getNextDue(item);
     const isOneOff = item.tipo === 'renda_extra';
-    if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) {
-      // done: only show its last paid month, if that matches
-      return null;
-    }
+    if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) return null;
     if (isOneOff) {
-      if (nextDue.getFullYear() === y && nextDue.getMonth() === m) {
-        const info = getStatus(item);
-        return { date: nextDue, status: info.status };
-      }
+      if (nextDue.getFullYear() === y && nextDue.getMonth() === m) return { date: nextDue, status: getStatus(item).status };
       return null;
     }
     const day = Math.min(item.diaVencimento, daysInMonth(y, m));
     const cellDate = new Date(y, m, day);
     const cycle = cycleOf(cellDate);
     if (nextDue.getFullYear() === y && nextDue.getMonth() === m && nextDue.getDate() === day) {
-      const info = getStatus(item);
-      return { date: cellDate, status: info.status };
+      return { date: cellDate, status: getStatus(item).status };
     }
     if (item.ultimoPagamento === cycle) return { date: cellDate, status: 'done' };
-    if (cellDate > nextDue) return { date: cellDate, status: 'scheduled' };
     return { date: cellDate, status: 'scheduled' };
   }
 
@@ -601,44 +511,40 @@
     document.getElementById('calMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
     const grid = document.getElementById('calGrid');
     let html = WEEKDAYS.map(w => `<div class="ff-cal-weekday">${w}</div>`).join('');
-
     const firstWeekday = new Date(calYear, calMonth, 1).getDay();
     const totalDays = daysInMonth(calYear, calMonth);
     const totalCells = Math.ceil((firstWeekday + totalDays) / 7) * 7;
     const prevMonthDays = daysInMonth(calYear, calMonth === 0 ? 11 : calMonth - 1);
-
     const today = new Date(); today.setHours(0, 0, 0, 0);
 
-    // Precompute occurrences per day-of-month for the displayed month
     const occByDay = {};
     items.forEach(item => {
       const occ = occurrenceForMonth(item, calYear, calMonth);
       if (occ) {
         const d = occ.date.getDate();
-        if (!occByDay[d]) occByDay[d] = [];
-        occByDay[d].push({ item, status: occ.status });
+        (occByDay[d] = occByDay[d] || []).push({ item, status: occ.status });
       }
     });
 
     for (let cell = 0; cell < totalCells; cell++) {
       const dayNum = cell - firstWeekday + 1;
       if (dayNum < 1) {
-        const d = prevMonthDays + dayNum;
-        html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${d}</div></div>`;
+        html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${prevMonthDays + dayNum}</div></div>`;
       } else if (dayNum > totalDays) {
-        const d = dayNum - totalDays;
-        html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${d}</div></div>`;
+        html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${dayNum - totalDays}</div></div>`;
       } else {
         const cellDate = new Date(calYear, calMonth, dayNum);
         const isToday = cellDate.getTime() === today.getTime();
         const isSelected = selectedDay === dayNum;
         const occ = occByDay[dayNum] || [];
-        const dots = occ.slice(0, 4).map(o => `<span class="ff-dot ${o.status}"></span>`).join('');
-        const more = occ.length > 4 ? `<span class="ff-cal-more">+${occ.length - 4}</span>` : '';
+        let dot = '';
+        if (occ.length) {
+          const worst = occ.reduce((a, b) => (STATUS_RANK[b.status] < STATUS_RANK[a.status] ? b : a));
+          dot = `<span class="ff-dot ${worst.status}"></span>`;
+        }
         html += `
           <div class="ff-cal-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" data-day="${dayNum}">
-            <div class="ff-cal-daynum">${dayNum}</div>
-            <div class="ff-cal-dots">${dots}${more}</div>
+            <div class="ff-cal-daynum">${dayNum}</div>${dot}
           </div>`;
       }
     }
@@ -648,62 +554,45 @@
 
   function renderDayDetail(occByDay) {
     const panel = document.getElementById('dayDetail');
-    if (!selectedDay || !occByDay[selectedDay] || !occByDay[selectedDay].length) {
-      panel.hidden = true;
-      return;
-    }
+    if (!selectedDay || !occByDay[selectedDay] || !occByDay[selectedDay].length) { panel.hidden = true; return; }
     panel.hidden = false;
-    const dateLabel = `${selectedDay} de ${MONTHS[calMonth]}`;
     const rows = occByDay[selectedDay].map(({ item, status }) => {
       const nat = TIPOS[item.tipo].natureza;
       const nextDue = getNextDue(item);
-      const isActionable = status !== 'done' && status !== 'scheduled';
       const info = { status, diffDays: Math.round((nextDue - new Date()) / 86400000) };
+      const isActionable = status !== 'done' && status !== 'scheduled';
       return `
-        <div class="ff-item-row st-${status}" data-id="${item.id}">
-          <div class="ff-item-main">
-            <div class="ff-item-name">${nat === 'receita' ? '💰 ' : ''}${escapeHtml(item.nome)}</div>
-            <div class="ff-item-tag">${escapeHtml(item.tipo === 'conta' ? (item.categoria || TIPOS[item.tipo].label) : TIPOS[item.tipo].label)}</div>
+        <div class="ff-row" data-id="${item.id}">
+          <span class="ff-dot ${status}"></span>
+          <div class="ff-row-body">
+            <div class="ff-row-name">${escapeHtml(item.nome)}</div>
+            <div class="ff-row-sub">${status === 'scheduled' ? 'Agendado' : dueText(nat, info)}</div>
           </div>
-          <div class="ff-item-value ${nat}">${fmtMoney(item.valorParcela)}</div>
-          <span class="ff-chip ${status}">${status === 'scheduled' ? 'Agendado' : chipLabel(nat, status)}</span>
-          ${isActionable ? `<div class="ff-item-actions"><button class="ff-btn-icon" data-action="pay" title="Marcar">✓</button></div>` : ''}
+          <div class="ff-row-value ${nat}">${fmtMoney(item.valorParcela)}</div>
+          ${isActionable ? `<button class="ff-row-check" data-action="pay">✓</button>` : ''}
         </div>`;
     }).join('');
-    panel.innerHTML = `<h4>${dateLabel}</h4>${rows}`;
+    panel.innerHTML = `<h4>${selectedDay} de ${MONTHS[calMonth]}</h4>${rows}`;
   }
 
-  // ---- Actions on item rows (shared handler) ----
+  // ---- Row interactions (click = edit, check = mark paid) ----
   function handleRowClick(e) {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const row = e.target.closest('[data-id]');
+    const row = e.target.closest('.ff-row');
+    if (!row) return;
     const id = row.dataset.id;
     const item = items.find(i => i.id === id);
-    const action = btn.dataset.action;
-    if (action === 'pay') {
+    const checkBtn = e.target.closest('button[data-action="pay"]');
+    if (checkBtn) {
       const due = getNextDue(item);
       item.ultimoPagamento = cycleOf(due);
       if (item.totalParcelas) item.parcelasPagas = Math.min(item.totalParcelas, (item.parcelasPagas || 0) + 1);
       saveData(); renderAll();
-    } else if (action === 'edit') {
+    } else {
       openItemModal(item);
-    } else if (action === 'delete') {
-      if (confirm(`Excluir "${item.nome}"?`)) {
-        items = items.filter(i => i.id !== id);
-        saveData(); renderAll();
-      }
     }
   }
 
-  // ---- Item form modal ----
-  function populateTipoSelect(natureza) {
-    const sel = document.getElementById('fTipo');
-    sel.innerHTML = Object.entries(TIPOS)
-      .filter(([, v]) => v.natureza === natureza)
-      .map(([k, v]) => `<option value="${k}">${v.label}</option>`)
-      .join('');
-  }
+  // ---- Item form ----
   function toggleFormFields() {
     const tipo = document.getElementById('fTipo').value;
     const natureza = TIPOS[tipo].natureza;
@@ -714,19 +603,16 @@
     document.getElementById('fValorLabel').textContent = natureza === 'receita' ? 'Valor (R$)' : 'Valor da parcela (R$)';
     document.getElementById('fDiaLabel').textContent = natureza === 'receita' ? 'Dia do recebimento' : 'Dia do vencimento';
   }
-  function setNatureza(nat) {
-    document.getElementById('natDespesaBtn').classList.toggle('active', nat === 'despesa');
-    document.getElementById('natReceitaBtn').classList.toggle('active', nat === 'receita');
-    populateTipoSelect(nat);
-    toggleFormFields();
+  function toggleMoreDetails(show) {
+    document.getElementById('moreDetails').hidden = !show;
+    document.getElementById('toggleMore').textContent = show ? '- Menos detalhes' : '+ Mais detalhes';
   }
   function openItemModal(item = null) {
     editingId = item ? item.id : null;
     document.getElementById('formTitle').textContent = item ? 'Editar lançamento' : 'Novo lançamento';
     document.getElementById('formError').textContent = '';
-    const natureza = item ? TIPOS[item.tipo].natureza : 'despesa';
-    setNatureza(natureza);
-    document.getElementById('fTipo').value = item ? item.tipo : Object.keys(TIPOS).find(k => TIPOS[k].natureza === natureza);
+    document.getElementById('formDelete').hidden = !item;
+    document.getElementById('fTipo').value = item ? item.tipo : 'conta';
     document.getElementById('fNome').value = item ? item.nome : '';
     document.getElementById('fCategoria').value = item ? (item.categoria || '') : '';
     document.getElementById('fValor').value = item ? item.valorParcela : '';
@@ -736,10 +622,10 @@
     document.getElementById('fContemplado').checked = !!(item && item.contemplado);
     document.getElementById('fObs').value = item ? (item.observacao || '') : '';
     toggleFormFields();
+    toggleMoreDetails(!!(item && (item.categoria || item.observacao || item.totalParcelas > 1 || item.contemplado)));
     document.getElementById('modalOverlay').hidden = false;
   }
   function closeItemModal() { document.getElementById('modalOverlay').hidden = true; editingId = null; }
-
   function handleFormSubmit(e) {
     e.preventDefault();
     const tipo = document.getElementById('fTipo').value;
@@ -753,7 +639,6 @@
     const contemplado = document.getElementById('fContemplado').checked;
     const observacao = document.getElementById('fObs').value.trim();
     const categoria = document.getElementById('fCategoria').value.trim();
-
     const errEl = document.getElementById('formError');
     if (!nome) return errEl.textContent = 'Informe um nome.';
     if (!(valorParcela > 0)) return errEl.textContent = 'Informe um valor válido.';
@@ -762,7 +647,6 @@
       if (!(totalParcelas > 0)) return errEl.textContent = 'Informe o total de parcelas.';
       if (parcelasPagas > totalParcelas) return errEl.textContent = 'Parcelas pagas não pode ser maior que o total.';
     }
-
     if (editingId) {
       const item = items.find(i => i.id === editingId);
       Object.assign(item, { tipo, nome, categoria, valorParcela, diaVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
@@ -771,9 +655,17 @@
     }
     saveData(); closeItemModal(); renderAll();
   }
+  function handleFormDelete() {
+    if (!editingId) return;
+    const item = items.find(i => i.id === editingId);
+    if (confirm(`Excluir "${item.nome}"?`)) {
+      items = items.filter(i => i.id !== editingId);
+      saveData(); closeItemModal(); renderAll();
+    }
+  }
 
-  // ---- PIN lock (privacidade de tela — não é criptografia real) ----
-  let savedPin = null; // null = nunca configurado · '__no_pin__' = sem PIN · string = PIN ativo
+  // ---- PIN lock ----
+  let savedPin = null;
   let lockMode = null;
   async function loadPin() {
     try { const res = await window.storage.get(PIN_KEY, true); savedPin = res && res.value ? res.value : null; }
@@ -800,7 +692,7 @@
     submitBtn.hidden = false;
     if (mode === 'create') {
       title.textContent = 'Criar um PIN';
-      sub.textContent = 'Evita que alguém abra as finanças de relance. Não criptografa nada — não é uma senha de verdade.';
+      sub.textContent = 'Evita que alguém abra as finanças de relance. Não criptografa nada.';
       currentWrap.hidden = true; mainWrap.hidden = false; mainLabel.textContent = 'Novo PIN'; confirmWrap.hidden = false;
       submitBtn.textContent = 'Salvar PIN'; secondaryBtn.hidden = false; secondaryBtn.textContent = 'Usar sem PIN'; forgotBtn.hidden = true;
     } else if (mode === 'enter') {
@@ -842,9 +734,7 @@
     else if (lockMode === 'change') { if (confirm('Remover a proteção por PIN?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); } }
   }
   function handleForgot() {
-    if (confirm('Isso remove a proteção por PIN. Os dados financeiros não são afetados. Continuar?')) {
-      savePinValue('__no_pin__'); closeLock(); updatePinUI();
-    }
+    if (confirm('Isso remove a proteção por PIN. Os dados não são afetados. Continuar?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); }
   }
   async function initLock() {
     await loadPin(); updatePinUI();
@@ -853,7 +743,7 @@
     else openLock('enter');
   }
 
-  // ---- Tabs / render orchestration ----
+  // ---- Orchestration ----
   function switchTab(tab) {
     activeTab = tab;
     document.querySelectorAll('.ff-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
@@ -871,11 +761,11 @@
   function init() {
     document.getElementById('btnAdd').addEventListener('click', () => openItemModal());
     document.getElementById('formCancel').addEventListener('click', closeItemModal);
+    document.getElementById('formDelete').addEventListener('click', handleFormDelete);
     document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeItemModal(); });
     document.getElementById('itemForm').addEventListener('submit', handleFormSubmit);
     document.getElementById('fTipo').addEventListener('change', toggleFormFields);
-    document.getElementById('natDespesaBtn').addEventListener('click', () => setNatureza('despesa'));
-    document.getElementById('natReceitaBtn').addEventListener('click', () => setNatureza('receita'));
+    document.getElementById('toggleMore').addEventListener('click', () => toggleMoreDetails(document.getElementById('moreDetails').hidden));
 
     document.querySelectorAll('.ff-tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
@@ -883,20 +773,11 @@
     document.getElementById('listContent').addEventListener('click', handleRowClick);
     document.getElementById('dayDetail').addEventListener('click', handleRowClick);
 
-    document.getElementById('listTabs').addEventListener('click', e => {
-      const b = e.target.closest('button[data-list-tab]'); if (!b) return;
-      activeListTab = b.dataset.listTab; renderList();
-    });
+    document.getElementById('listFilter').addEventListener('change', e => { activeListFilter = e.target.value; renderList(); });
     document.getElementById('showDone').addEventListener('change', e => { showDone = e.target.checked; renderList(); });
 
-    document.getElementById('calPrev').addEventListener('click', () => {
-      calMonth -= 1; if (calMonth < 0) { calMonth = 11; calYear -= 1; }
-      selectedDay = null; renderCalendar();
-    });
-    document.getElementById('calNext').addEventListener('click', () => {
-      calMonth += 1; if (calMonth > 11) { calMonth = 0; calYear += 1; }
-      selectedDay = null; renderCalendar();
-    });
+    document.getElementById('calPrev').addEventListener('click', () => { calMonth -= 1; if (calMonth < 0) { calMonth = 11; calYear -= 1; } selectedDay = null; renderCalendar(); });
+    document.getElementById('calNext').addEventListener('click', () => { calMonth += 1; if (calMonth > 11) { calMonth = 0; calYear += 1; } selectedDay = null; renderCalendar(); });
     document.getElementById('calGrid').addEventListener('click', e => {
       const cell = e.target.closest('.ff-cal-cell:not(.outside)');
       if (!cell) return;
@@ -904,7 +785,6 @@
       renderCalendar();
     });
 
-    // Settings
     document.getElementById('btnSettings').addEventListener('click', () => document.getElementById('settingsOverlay').hidden = false);
     document.getElementById('settingsClose').addEventListener('click', () => document.getElementById('settingsOverlay').hidden = true);
     document.getElementById('settingsOverlay').addEventListener('click', e => { if (e.target.id === 'settingsOverlay') document.getElementById('settingsOverlay').hidden = true; });
@@ -921,7 +801,7 @@
       document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleLockSubmit(); } });
     });
 
-    setNatureza('despesa');
+    toggleFormFields();
     loadData().then(renderAll);
     initLock();
   }
