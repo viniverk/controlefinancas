@@ -871,8 +871,11 @@
     }
   }
   function handleLockSecondary() {
-    if (lockMode === 'create') { savePinValue('__no_pin__'); closeLock(); updatePinUI(); }
-    else if (lockMode === 'change') { if (confirm('Remover a proteção por PIN?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); } }
+    if (lockMode === 'create') {
+      if (confirm('Usar sem PIN? Qualquer pessoa com o link vai poder abrir direto, sem nenhuma trava — vale pra todo mundo, não só pra você.')) {
+        savePinValue('__no_pin__'); closeLock(); updatePinUI();
+      }
+    } else if (lockMode === 'change') { if (confirm('Remover a proteção por PIN?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); } }
   }
   function handleForgot() {
     if (confirm('Isso remove a proteção por PIN. Os dados não são afetados. Continuar?')) { savePinValue('__no_pin__'); closeLock(); updatePinUI(); }
