@@ -130,6 +130,9 @@
   .ff-lock-actions button { flex: 1; }
   .ff-lock-link { display: block; width: 100%; margin: 14px 0 0; background: none; border: none; color: var(--primary); font-size: .8rem; font-weight: 700; cursor: pointer; text-align: center; }
   .ff-lock-link[hidden] { display: none; }
+  .ff-profile-btn { display: block; width: 100%; text-align: left; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-family: 'Inter', sans-serif; font-weight: 600; font-size: .86rem; color: var(--text); cursor: pointer; margin-bottom: 8px; }
+  .ff-profile-btn:hover { border-color: var(--primary); background: #f2f6f4; }
+  .ff-profile-divider { font-size: .72rem; color: var(--text-soft); text-align: center; margin: 4px 0 12px; }
 
   @media (max-width: 480px) {
     .ff-field-row { grid-template-columns: 1fr; }
@@ -144,9 +147,10 @@
   <div class="ff-lock-card">
     <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
     <h2>Quem é você?</h2>
-    <p class="ff-lock-sub">Só pra identificar quem fez o quê. Fica salvo neste navegador — não é uma senha.</p>
+    <p class="ff-lock-sub">Escolha seu perfil ou crie um novo. Fica salvo neste navegador — não é uma senha.</p>
+    <div id="knownUsersList"></div>
     <div class="ff-field">
-      <label>Seu nome</label>
+      <label>Novo perfil</label>
       <input type="text" id="userNameInput" placeholder="Ex: Você ou Esposa" maxlength="30">
     </div>
     <div class="ff-error" id="userError"></div>
@@ -773,6 +777,7 @@
   }
   // ---- Passwordless name tag (not real auth — just identifies who's using it) ----
   const USER_KEY = 'ff-user-name';
+  const KNOWN_USERS_KEY = 'ff-known-users';
   let currentUserName = null;
 
   async function loadUserName() {
@@ -787,25 +792,49 @@
     currentUserName = null;
     try { localStorage.removeItem(USER_KEY); } catch (e) { console.error(e); }
   }
+  async function loadKnownUsers() {
+    try {
+      const snapshot = await db.ref(KNOWN_USERS_KEY).once('value');
+      const val = snapshot.val();
+      return val ? JSON.parse(val) : [];
+    } catch (e) { return []; }
+  }
+  async function addKnownUser(name) {
+    const list = await loadKnownUsers();
+    if (!list.includes(name)) {
+      list.push(name);
+      try { await db.ref(KNOWN_USERS_KEY).set(JSON.stringify(list)); } catch (e) { console.error(e); }
+    }
+  }
   function updateUserUI() {
     const greeting = document.getElementById('userGreeting');
     if (greeting) greeting.textContent = currentUserName ? `Olá, ${currentUserName} 👋` : '';
     const logoutLabel = document.getElementById('logoutRowLabel');
     if (logoutLabel) logoutLabel.textContent = currentUserName ? `Você está como: ${currentUserName}` : 'Nenhum nome definido';
   }
-  function openUserScreen() {
+  async function openUserScreen() {
     document.getElementById('userError').textContent = '';
     document.getElementById('userNameInput').value = '';
+    const known = await loadKnownUsers();
+    const listEl = document.getElementById('knownUsersList');
+    listEl.innerHTML = known.length
+      ? known.map(n => `<button type="button" class="ff-profile-btn" data-name="${escapeHtml(n)}">Continuar como ${escapeHtml(n)}</button>`).join('')
+        + `<div class="ff-profile-divider">ou crie um novo perfil abaixo</div>`
+      : '';
     document.getElementById('userOverlay').hidden = false;
     setTimeout(() => document.getElementById('userNameInput').focus(), 0);
   }
   function closeUserScreen() { document.getElementById('userOverlay').hidden = true; }
-  async function handleUserSubmit() {
-    const name = document.getElementById('userNameInput').value.trim();
-    if (!name) { document.getElementById('userError').textContent = 'Digite um nome.'; return; }
+  async function selectUser(name) {
     await saveUserName(name);
     updateUserUI();
     closeUserScreen();
+  }
+  async function handleUserSubmit() {
+    const name = document.getElementById('userNameInput').value.trim();
+    if (!name) { document.getElementById('userError').textContent = 'Digite um nome ou escolha um perfil acima.'; return; }
+    await addKnownUser(name);
+    await selectUser(name);
   }
   async function initUser() {
     await loadUserName();
@@ -813,7 +842,7 @@
     if (!currentUserName) openUserScreen();
   }
   function handleLogout() {
-    if (confirm('Sair? Vai pedir seu nome de novo da próxima vez que abrir.')) {
+    if (confirm('Sair? Da próxima vez você escolhe o perfil de novo.')) {
       clearUserName();
       updateUserUI();
       document.getElementById('settingsOverlay').hidden = true;
@@ -915,6 +944,10 @@
 
     document.getElementById('userSubmit').addEventListener('click', handleUserSubmit);
     document.getElementById('userNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleUserSubmit(); } });
+    document.getElementById('knownUsersList').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-name]');
+      if (btn) selectUser(btn.dataset.name);
+    });
     document.getElementById('btnLogout').addEventListener('click', handleLogout);
 
     toggleFormFields();
