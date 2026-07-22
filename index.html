@@ -438,6 +438,9 @@
       delete item.diaVencimento;
       delete item.ultimoPagamento;
     }
+    if (!item.primeiroVencimento) {
+      item.primeiroVencimento = item.dataVencimento;
+    }
     return item;
   }
   function startDataSync() {
@@ -611,7 +614,11 @@
     if (nextDue.getFullYear() === y && nextDue.getMonth() === m) {
       return { date: cellDate, status: getStatus(item).status };
     }
-    if (cellDate < nextDue) return { date: cellDate, status: 'done' };
+    if (cellDate < nextDue) {
+      const firstDue = new Date(item.primeiroVencimento + 'T00:00:00');
+      if (cellDate < firstDue) return null; // o lançamento ainda não existia nesse mês
+      return { date: cellDate, status: 'done' };
+    }
     return { date: cellDate, status: 'scheduled' };
   }
 
@@ -762,7 +769,7 @@
       const item = items.find(i => i.id === editingId);
       Object.assign(item, { tipo, nome, categoria, valorParcela, dataVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
     } else {
-      items.push({ id: uid(), tipo, nome, categoria, valorParcela, dataVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
+      items.push({ id: uid(), tipo, nome, categoria, valorParcela, dataVencimento, primeiroVencimento: dataVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
     }
     saveData(); closeItemModal(); renderAll();
   }
