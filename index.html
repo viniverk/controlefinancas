@@ -616,10 +616,10 @@
     }
     if (cellDate < nextDue) {
       const firstDue = new Date(item.primeiroVencimento + 'T00:00:00');
-      if (cellDate < firstDue) return null; // o lançamento ainda não existia nesse mês
+      if (cellDate < firstDue) return null;
       return { date: cellDate, status: 'done' };
     }
-    return { date: cellDate, status: 'scheduled' };
+    return null;
   }
 
   function renderCalendar() {
