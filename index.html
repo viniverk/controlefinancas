@@ -264,8 +264,8 @@
         <input id="fValor" type="number" min="0" step="0.01" required>
       </div>
       <div class="ff-field">
-        <label id="fDiaLabel">Dia do vencimento</label>
-        <input id="fDia" type="number" min="1" max="31" required>
+        <label id="fDiaLabel">Data do vencimento</label>
+        <input id="fDia" type="date" required>
       </div>
     </div>
 
@@ -319,6 +319,34 @@
         <div class="ff-settings-sub">Sai da sua conta neste aparelho.</div>
       </div>
       <button class="ff-btn ff-btn-ghost" id="btnLogout">Sair</button>
+    </div>
+    <div class="ff-settings-row" style="display:block;">
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+        <div>
+          <div class="ff-settings-label">Alterar senha</div>
+          <div class="ff-settings-sub">A senha atual não pode ser exibida — só trocada.</div>
+        </div>
+        <button class="ff-btn ff-btn-ghost" id="btnChangePassword" type="button">Alterar</button>
+      </div>
+      <div id="changePasswordForm" hidden style="margin-top:12px;">
+        <div class="ff-field">
+          <label>Senha atual</label>
+          <input type="password" id="cpCurrent" autocomplete="current-password">
+        </div>
+        <div class="ff-field">
+          <label>Nova senha</label>
+          <input type="password" id="cpNew" autocomplete="new-password" minlength="6">
+        </div>
+        <div class="ff-field">
+          <label>Confirmar nova senha</label>
+          <input type="password" id="cpConfirm" autocomplete="new-password" minlength="6">
+        </div>
+        <div class="ff-error" id="cpError"></div>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="ff-btn ff-btn-ghost" id="cpCancel">Cancelar</button>
+          <button type="button" class="ff-btn ff-btn-primary" id="cpSubmit">Salvar nova senha</button>
+        </div>
+      </div>
     </div>
     <div class="ff-settings-row">
       <div>
@@ -383,7 +411,6 @@
 
   const fmtMoney = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2));
-  const cycleOf = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
   const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -398,12 +425,27 @@
   function itemsRef() { return db.ref('users/' + currentUid + '/items'); }
   function profileRef(uidArg) { return db.ref('users/' + uidArg + '/profile'); }
 
+  function migrateItem(item) {
+    if (!item.dataVencimento && item.diaVencimento) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      let y = today.getFullYear(), m = today.getMonth();
+      let due = new Date(y, m, Math.min(item.diaVencimento, daysInMonth(y, m)));
+      if (due < today) {
+        m += 1; if (m > 11) { m = 0; y += 1; }
+        due = new Date(y, m, Math.min(item.diaVencimento, daysInMonth(y, m)));
+      }
+      item.dataVencimento = isoDate(due);
+      delete item.diaVencimento;
+      delete item.ultimoPagamento;
+    }
+    return item;
+  }
   function startDataSync() {
     stopDataSync();
     itemsListenerRef = itemsRef();
     itemsListenerRef.on('value', snapshot => {
       const val = snapshot.val();
-      try { items = val ? JSON.parse(val) : []; } catch (e) { items = []; }
+      try { items = val ? JSON.parse(val).map(migrateItem) : []; } catch (e) { items = []; }
       renderAll();
     });
   }
@@ -443,12 +485,14 @@
   }
 
   // ---- Status helpers ----
-  function getNextDue(item, ref = new Date()) {
-    let y = ref.getFullYear(), m = ref.getMonth();
-    const currentCycle = cycleOf(new Date(y, m, 1));
-    if (item.ultimoPagamento === currentCycle) { m += 1; if (m > 11) { m = 0; y += 1; } }
-    const day = Math.min(item.diaVencimento, daysInMonth(y, m));
-    return new Date(y, m, day);
+  function isoDate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  function getNextDue(item) { return new Date(item.dataVencimento + 'T00:00:00'); }
+  function advanceOneMonth(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    let m = d.getMonth() + 1, y = d.getFullYear();
+    if (m > 11) { m = 0; y += 1; }
+    const newDay = Math.min(d.getDate(), daysInMonth(y, m));
+    return isoDate(new Date(y, m, newDay));
   }
   function getStatus(item) {
     if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) return { status: 'done' };
@@ -555,20 +599,19 @@
   const STATUS_RANK = { overdue: 0, soon: 1, ok: 2, scheduled: 3, done: 4 };
 
   function occurrenceForMonth(item, y, m) {
+    if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) return null;
     const nextDue = getNextDue(item);
     const isOneOff = item.tipo === 'renda_extra';
-    if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) return null;
     if (isOneOff) {
       if (nextDue.getFullYear() === y && nextDue.getMonth() === m) return { date: nextDue, status: getStatus(item).status };
       return null;
     }
-    const day = Math.min(item.diaVencimento, daysInMonth(y, m));
+    const day = Math.min(nextDue.getDate(), daysInMonth(y, m));
     const cellDate = new Date(y, m, day);
-    const cycle = cycleOf(cellDate);
-    if (nextDue.getFullYear() === y && nextDue.getMonth() === m && nextDue.getDate() === day) {
+    if (nextDue.getFullYear() === y && nextDue.getMonth() === m) {
       return { date: cellDate, status: getStatus(item).status };
     }
-    if (item.ultimoPagamento === cycle) return { date: cellDate, status: 'done' };
+    if (cellDate < nextDue) return { date: cellDate, status: 'done' };
     return { date: cellDate, status: 'scheduled' };
   }
 
@@ -648,9 +691,12 @@
     const item = items.find(i => i.id === id);
     const checkBtn = e.target.closest('button[data-action="pay"]');
     if (checkBtn) {
-      const due = getNextDue(item);
-      item.ultimoPagamento = cycleOf(due);
-      if (item.totalParcelas) item.parcelasPagas = Math.min(item.totalParcelas, (item.parcelasPagas || 0) + 1);
+      if (item.totalParcelas) {
+        item.parcelasPagas = Math.min(item.totalParcelas, (item.parcelasPagas || 0) + 1);
+        if (item.parcelasPagas < item.totalParcelas) item.dataVencimento = advanceOneMonth(item.dataVencimento);
+      } else {
+        item.dataVencimento = advanceOneMonth(item.dataVencimento);
+      }
       saveData(); renderAll();
     } else {
       openItemModal(item);
@@ -666,7 +712,7 @@
     document.getElementById('fParcelasWrap').style.display = showParcelas ? '' : 'none';
     document.getElementById('fContempladoWrap').style.display = tipo === 'consorcio' ? '' : 'none';
     document.getElementById('fValorLabel').textContent = natureza === 'receita' ? 'Valor (R$)' : 'Valor da parcela (R$)';
-    document.getElementById('fDiaLabel').textContent = natureza === 'receita' ? 'Dia do recebimento' : 'Dia do vencimento';
+    document.getElementById('fDiaLabel').textContent = natureza === 'receita' ? 'Data do recebimento' : 'Data do vencimento';
   }
   function toggleMoreDetails(show) {
     document.getElementById('moreDetails').hidden = !show;
@@ -681,7 +727,7 @@
     document.getElementById('fNome').value = item ? item.nome : '';
     document.getElementById('fCategoria').value = item ? (item.categoria || '') : '';
     document.getElementById('fValor').value = item ? item.valorParcela : '';
-    document.getElementById('fDia').value = item ? item.diaVencimento : '';
+    document.getElementById('fDia').value = item ? item.dataVencimento : isoDate(new Date());
     document.getElementById('fTotalParcelas').value = item && item.totalParcelas ? item.totalParcelas : '';
     document.getElementById('fParcelasPagas').value = item ? (item.parcelasPagas || 0) : 0;
     document.getElementById('fContemplado').checked = !!(item && item.contemplado);
@@ -696,7 +742,7 @@
     const tipo = document.getElementById('fTipo').value;
     const nome = document.getElementById('fNome').value.trim();
     const valorParcela = parseFloat(document.getElementById('fValor').value);
-    const diaVencimento = parseInt(document.getElementById('fDia').value, 10);
+    const dataVencimento = document.getElementById('fDia').value;
     const isParcelado = tipo === 'financiamento' || tipo === 'emprestimo' || tipo === 'consorcio';
     let totalParcelas = isParcelado ? parseInt(document.getElementById('fTotalParcelas').value, 10) || null : null;
     let parcelasPagas = isParcelado ? (parseInt(document.getElementById('fParcelasPagas').value, 10) || 0) : 0;
@@ -707,16 +753,16 @@
     const errEl = document.getElementById('formError');
     if (!nome) return errEl.textContent = 'Informe um nome.';
     if (!(valorParcela > 0)) return errEl.textContent = 'Informe um valor válido.';
-    if (!(diaVencimento >= 1 && diaVencimento <= 31)) return errEl.textContent = 'O dia deve ser entre 1 e 31.';
+    if (!dataVencimento) return errEl.textContent = 'Informe uma data.';
     if (isParcelado) {
       if (!(totalParcelas > 0)) return errEl.textContent = 'Informe o total de parcelas.';
       if (parcelasPagas > totalParcelas) return errEl.textContent = 'Parcelas pagas não pode ser maior que o total.';
     }
     if (editingId) {
       const item = items.find(i => i.id === editingId);
-      Object.assign(item, { tipo, nome, categoria, valorParcela, diaVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
+      Object.assign(item, { tipo, nome, categoria, valorParcela, dataVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
     } else {
-      items.push({ id: uid(), tipo, nome, categoria, valorParcela, diaVencimento, totalParcelas, parcelasPagas, contemplado, observacao, ultimoPagamento: null });
+      items.push({ id: uid(), tipo, nome, categoria, valorParcela, dataVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
     }
     saveData(); closeItemModal(); renderAll();
   }
@@ -814,6 +860,43 @@
 
   function handleLogout() {
     if (confirm('Sair da sua conta?')) { auth.signOut(); }
+  }
+
+  function openChangePassword() {
+    document.getElementById('cpCurrent').value = '';
+    document.getElementById('cpNew').value = '';
+    document.getElementById('cpConfirm').value = '';
+    document.getElementById('cpError').textContent = '';
+    document.getElementById('changePasswordForm').hidden = false;
+  }
+  function closeChangePassword() {
+    document.getElementById('changePasswordForm').hidden = true;
+  }
+  async function handleChangePassword() {
+    const errEl = document.getElementById('cpError');
+    errEl.textContent = '';
+    const currentPassword = document.getElementById('cpCurrent').value;
+    const newPassword = document.getElementById('cpNew').value;
+    const confirmPassword = document.getElementById('cpConfirm').value;
+    if (!currentPassword || !newPassword) { errEl.textContent = 'Preencha todos os campos.'; return; }
+    if (newPassword.length < 6) { errEl.textContent = 'A nova senha precisa ter pelo menos 6 caracteres.'; return; }
+    if (newPassword !== confirmPassword) { errEl.textContent = 'As senhas novas não coincidem.'; return; }
+    try {
+      const user = auth.currentUser;
+      const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+      closeChangePassword();
+      alert('Senha alterada com sucesso.');
+    } catch (e) {
+      if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+        errEl.textContent = 'Senha atual incorreta.';
+      } else if (e.code === 'auth/requires-recent-login') {
+        errEl.textContent = 'Por segurança, saia e entre de novo antes de trocar a senha.';
+      } else {
+        errEl.textContent = translateAuthError(e.code);
+      }
+    }
   }
 
   async function checkDisabledAndAdmin(user) {
@@ -967,6 +1050,9 @@
     document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
     document.getElementById('importFile').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
     document.getElementById('btnLogout').addEventListener('click', handleLogout);
+    document.getElementById('btnChangePassword').addEventListener('click', openChangePassword);
+    document.getElementById('cpCancel').addEventListener('click', closeChangePassword);
+    document.getElementById('cpSubmit').addEventListener('click', handleChangePassword);
 
     document.getElementById('authSubmit').addEventListener('click', handleAuthSubmit);
     document.getElementById('authToggle').addEventListener('click', () => setAuthMode(authMode === 'signup' ? 'signin' : 'signup'));
