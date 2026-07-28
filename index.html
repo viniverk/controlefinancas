@@ -75,8 +75,9 @@
   .ff-row-check { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: .82rem; flex-shrink: 0; }
   .ff-row-check:hover { background: var(--receita); color: #fff; border-color: var(--receita); }
 
-  .ff-list-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .ff-list-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
   .ff-list-controls select { font-family: 'Inter', sans-serif; font-size: .82rem; font-weight: 600; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .ff-list-total { font-size: .78rem; color: var(--text-soft); font-weight: 600; margin-bottom: 10px; }
   .ff-toggle { font-size: .78rem; color: var(--text-soft); display: flex; align-items: center; gap: 6px; margin-left: auto; }
 
   /* Calendar */
@@ -221,8 +222,15 @@
           <option value="consorcio">Consórcios</option>
           <option value="receita">Receitas</option>
         </select>
+        <select id="listSort">
+          <option value="vencimento">Ordenar: vencimento</option>
+          <option value="valor-desc">Ordenar: maior valor</option>
+          <option value="valor-asc">Ordenar: menor valor</option>
+          <option value="nome">Ordenar: nome (A-Z)</option>
+        </select>
         <label class="ff-toggle"><input type="checkbox" id="showDone"> mostrar concluídos</label>
       </div>
+      <div class="ff-list-total" id="listTotal"></div>
       <div id="listContent"></div>
     </section>
 
@@ -301,7 +309,10 @@
     <div class="ff-error" id="formError"></div>
 
     <div class="ff-modal-actions">
-      <button type="button" class="ff-delete-link" id="formDelete" hidden>Excluir lançamento</button>
+      <div style="display:flex; gap:14px;">
+        <button type="button" class="ff-delete-link" id="formDelete" hidden>Excluir lançamento</button>
+        <button type="button" class="ff-link" id="formDuplicate" hidden style="margin:0;">Duplicar</button>
+      </div>
       <div style="display:flex; gap:10px; margin-left:auto;">
         <button type="button" class="ff-btn ff-btn-ghost" id="formCancel">Cancelar</button>
         <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
@@ -395,6 +406,7 @@
   let items = [];
   let editingId = null;
   let activeListFilter = 'todos';
+  let activeListSort = 'vencimento';
   let showDone = false;
   let activeTab = 'overview';
   let calYear, calMonth;
@@ -516,17 +528,19 @@
     if (info.diffDays === -1) return `${verbPast(nat)} há 1 dia`;
     return `${verbPast(nat)} há ${Math.abs(info.diffDays)} dias`;
   }
+  function fmtDateShort(d) { return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`; }
 
   // ---- Minimal row component ----
   function rowHtml(item, info) {
     const nat = TIPOS[item.tipo].natureza;
     const tag = item.tipo === 'conta' ? (item.categoria || TIPOS[item.tipo].label) : TIPOS[item.tipo].label;
+    const dateLabel = info.due ? ` · ${fmtDateShort(info.due)}` : '';
     return `
       <div class="ff-row" data-id="${item.id}">
         <span class="ff-dot ${info.status}"></span>
         <div class="ff-row-body">
           <div class="ff-row-name">${escapeHtml(item.nome)}</div>
-          <div class="ff-row-sub">${escapeHtml(tag)} · ${dueText(nat, info)}</div>
+          <div class="ff-row-sub">${escapeHtml(tag)} · ${dueText(nat, info)}${dateLabel}</div>
         </div>
         <div class="ff-row-value ${nat}">${fmtMoney(item.valorParcela)}</div>
         ${info.status !== 'done' ? `<button class="ff-row-check" data-action="pay" title="Marcar como ${nat === 'receita' ? 'recebido' : 'pago'}">✓</button>` : ''}
@@ -572,16 +586,43 @@
     if (activeListFilter === 'receita') return TIPOS[item.tipo].natureza === 'receita';
     return item.tipo === activeListFilter;
   }
-  function renderList() {
-    const rows = items
-      .filter(matchesFilter)
-      .map(i => ({ item: i, info: getStatus(i) }))
-      .filter(x => showDone || x.info.status !== 'done')
-      .sort((a, b) => {
+  function sortRows(rows) {
+    const sorted = [...rows];
+    if (activeListSort === 'valor-desc') {
+      sorted.sort((a, b) => Number(b.item.valorParcela) - Number(a.item.valorParcela));
+    } else if (activeListSort === 'valor-asc') {
+      sorted.sort((a, b) => Number(a.item.valorParcela) - Number(b.item.valorParcela));
+    } else if (activeListSort === 'nome') {
+      sorted.sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR'));
+    } else {
+      sorted.sort((a, b) => {
         const da = a.info.status === 'done' ? Infinity : a.info.diffDays;
         const db = b.info.status === 'done' ? Infinity : b.info.diffDays;
         return da - db;
       });
+    }
+    return sorted;
+  }
+  const GROUP_LABELS = { conta: 'Contas fixas', credito: 'Financiamentos & Empréstimos', consorcio: 'Consórcios', receita: 'Receitas' };
+  function groupKey(item) {
+    if (item.tipo === 'financiamento' || item.tipo === 'emprestimo') return 'credito';
+    if (item.tipo === 'consorcio') return 'consorcio';
+    if (TIPOS[item.tipo].natureza === 'receita') return 'receita';
+    return 'conta';
+  }
+  function renderList() {
+    const filtered = items
+      .filter(matchesFilter)
+      .map(i => ({ item: i, info: getStatus(i) }))
+      .filter(x => showDone || x.info.status !== 'done');
+
+    const totalEl = document.getElementById('listTotal');
+    const totalValue = filtered.reduce((s, x) => s + Number(x.item.valorParcela || 0), 0);
+    totalEl.textContent = filtered.length
+      ? `${filtered.length} lançamento${filtered.length === 1 ? '' : 's'} · ${fmtMoney(totalValue)}`
+      : '';
+
+    const rows = sortRows(filtered);
     const el = document.getElementById('listContent');
     if (!rows.length) {
       el.innerHTML = `
@@ -591,6 +632,18 @@
         </div>`;
       const b = document.getElementById('listEmptyAdd');
       if (b) b.addEventListener('click', () => openItemModal());
+      return;
+    }
+
+    if (activeListFilter === 'todos') {
+      const groups = { conta: [], credito: [], consorcio: [], receita: [] };
+      rows.forEach(x => groups[groupKey(x.item)].push(x));
+      el.innerHTML = Object.entries(groups)
+        .filter(([, v]) => v.length)
+        .map(([k, v]) => `
+          <div class="ff-section-title">${GROUP_LABELS[k]}</div>
+          ${v.map(x => rowHtml(x.item, x.info)).join('')}
+        `).join('');
     } else {
       el.innerHTML = rows.map(x => rowHtml(x.item, x.info)).join('');
     }
@@ -730,6 +783,7 @@
     document.getElementById('formTitle').textContent = item ? 'Editar lançamento' : 'Novo lançamento';
     document.getElementById('formError').textContent = '';
     document.getElementById('formDelete').hidden = !item;
+    document.getElementById('formDuplicate').hidden = !item;
     document.getElementById('fTipo').value = item ? item.tipo : 'conta';
     document.getElementById('fNome').value = item ? item.nome : '';
     document.getElementById('fCategoria').value = item ? (item.categoria || '') : '';
@@ -780,6 +834,18 @@
       items = items.filter(i => i.id !== editingId);
       saveData(); closeItemModal(); renderAll();
     }
+  }
+  function handleFormDuplicate() {
+    if (!editingId) return;
+    editingId = null;
+    document.getElementById('formTitle').textContent = 'Duplicar lançamento';
+    document.getElementById('formDelete').hidden = true;
+    document.getElementById('formDuplicate').hidden = true;
+    const nomeInput = document.getElementById('fNome');
+    nomeInput.value = nomeInput.value + ' (cópia)';
+    document.getElementById('fParcelasPagas').value = 0;
+    nomeInput.focus();
+    nomeInput.select();
   }
 
   // ---- Real login (Firebase Authentication — email + password) ----
@@ -1027,6 +1093,7 @@
     document.getElementById('btnAdd').addEventListener('click', () => openItemModal());
     document.getElementById('formCancel').addEventListener('click', closeItemModal);
     document.getElementById('formDelete').addEventListener('click', handleFormDelete);
+    document.getElementById('formDuplicate').addEventListener('click', handleFormDuplicate);
     document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeItemModal(); });
     document.getElementById('itemForm').addEventListener('submit', handleFormSubmit);
     document.getElementById('fTipo').addEventListener('change', toggleFormFields);
@@ -1039,6 +1106,7 @@
     document.getElementById('dayDetail').addEventListener('click', handleRowClick);
 
     document.getElementById('listFilter').addEventListener('change', e => { activeListFilter = e.target.value; renderList(); });
+    document.getElementById('listSort').addEventListener('change', e => { activeListSort = e.target.value; renderList(); });
     document.getElementById('showDone').addEventListener('change', e => { showDone = e.target.checked; renderList(); });
 
     document.getElementById('calPrev').addEventListener('click', () => { calMonth -= 1; if (calMonth < 0) { calMonth = 11; calYear -= 1; } selectedDay = null; renderCalendar(); });
