@@ -19,12 +19,12 @@ No repositório do site: **Add file → Upload files** e arraste **tudo** (inclu
 Firebase → **Realtime Database → Regras** → apague tudo, cole o conteúdo de `regras-do-banco.json` → **Publicar**.
 (Sem isso, o histórico de gastos, os limites e as notificações não salvam.)
 
-### 3) Chave das notificações (VAPID)
+### 3) Chave das notificações (VAPID) — já está colada no `index.html`
 Firebase → ⚙️ **Configurações do projeto → Cloud Messaging → Certificados push da Web → Gerar par de chaves**.
 Copie a chave e cole no `index.html`, no lugar de `COLE_AQUI_A_CHAVE_VAPID` (perto do começo do `<script>`). Salve o arquivo no GitHub.
 
 ### 4) Liberar o envio automático (GitHub Actions)
-1. Firebase → ⚙️ **Configurações do projeto → Contas de serviço → Gerar nova chave privada**. Baixa um arquivo `.json`. **Não suba esse arquivo no site!**
+1. Firebase → ⚙️ **Configurações do projeto → Contas de serviço → Gerar nova chave privada**. Baixa um arquivo `.json`. **Não suba esse arquivo no site, no chat nem em nenhum lugar — ele dá acesso total ao banco.**
 2. GitHub → seu repositório → **Settings → Secrets and variables → Actions → New repository secret**
    - Nome: `FIREBASE_SERVICE_ACCOUNT`
    - Valor: abra o `.json` no bloco de notas, copie **tudo** e cole.
