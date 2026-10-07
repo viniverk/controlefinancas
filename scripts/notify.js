@@ -17,6 +17,8 @@ function dm(s) { return s.slice(8, 10) + '/' + s.slice(5, 7); }
 function lastDayOfMonth(key) { const [y, m] = key.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
 
 const DESPESA = new Set(['conta', 'financiamento', 'emprestimo', 'consorcio']);
+const CARD_CAT = 'Cartão de crédito';   // fatura do cartão: só caixa, não entra nos limites
+const pad = n => String(n).padStart(2, '0');
 function isDone(i) { return !!(i.totalParcelas && i.parcelasPagas >= i.totalParcelas); }
 function catOf(i) {
   if (i.categoria) return i.categoria;
@@ -24,38 +26,81 @@ function catOf(i) {
   if (i.tipo === 'financiamento' || i.tipo === 'emprestimo' || i.tipo === 'consorcio') return 'Financiamentos';
   return 'Outros';
 }
+function dim(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); } // m = 1..12
 
-/* Mesma regra usada na tela "Gastos e limites": gasto do mês = pagamentos do mês + contas ainda a pagar neste mês. */
+/* Em qual fatura cai uma compra? (mesma regra do app) */
+function invoiceFor(card, iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const fech = Math.max(1, Math.min(31, Number(card.fechamento) || 1));
+  const venc = Math.max(1, Math.min(31, Number(card.vencimento) || 1));
+  let cy = y, cm = m;
+  if (d > Math.min(fech, dim(cy, cm))) { cm++; if (cm > 12) { cm = 1; cy++; } }
+  let dy = cy, dm = cm;
+  if (venc <= fech) { dm++; if (dm > 12) { dm = 1; dy++; } }
+  return { key: `${dy}-${pad(dm)}`, due: `${dy}-${pad(dm)}-${pad(Math.min(venc, dim(dy, dm)))}` };
+}
+function pendingInvoices(settings, payments) {
+  const cards = settings.cartoes || [];
+  const map = {};
+  payments.forEach(p => {
+    if (p.tipo !== 'cartao' || !p.data) return;
+    const card = cards.find(c => c.id === p.cartaoId);
+    if (!card) return;
+    const inf = invoiceFor(card, p.data);
+    const k = card.id + '|' + inf.key;
+    const inv = map[k] || (map[k] = { card, key: inf.key, due: inf.due, total: 0, paid: 0 });
+    inv.total += Number(p.valor) || 0;
+  });
+  payments.forEach(p => {
+    if (p.tipo !== 'fatura') return;
+    const inv = map[p.cartaoId + '|' + p.faturaKey];
+    if (inv) inv.paid += Number(p.valor) || 0;
+  });
+  return Object.values(map)
+    .map(inv => Object.assign(inv, { remaining: Math.max(0, Math.round((inv.total - inv.paid) * 100) / 100) }))
+    .filter(inv => inv.remaining >= 0.005 && inv.total > 0);
+}
+
+/* Mesma regra da tela "Gastos e limites":
+   - gasto do mês por categoria = pagamentos e compras no cartão do MÊS DA COMPRA + contas ainda a pagar neste mês
+   - a fatura do cartão NÃO entra no limite (só nos vencimentos) */
 function buildAlerts({ items, payments, settings, today }) {
   const dias = Number.isFinite(Number(settings.alertaDias)) ? Number(settings.alertaDias) : 3;
   const pct = Number(settings.alertaPct) || 80;
   const lines = [];
 
-  // 1) contas perto de vencer / vencidas
+  // 1) vencimentos: contas e faturas de cartão
   const due = [];
   items.forEach(i => {
     if (!DESPESA.has(i.tipo) || isDone(i) || !i.dataVencimento) return;
     const d = diffDays(i.dataVencimento, today);
-    if (d <= dias) due.push({ i, d });
+    if (d <= dias) due.push({ nome: i.nome, valor: i.valorParcela, venc: i.dataVencimento, d, icone: '🔔' });
+  });
+  pendingInvoices(settings, payments).forEach(inv => {
+    const d = diffDays(inv.due, today);
+    if (d <= dias) due.push({ nome: `Fatura ${inv.card.nome}`, valor: inv.remaining, venc: inv.due, d, icone: '💳' });
   });
   due.sort((a, b) => a.d - b.d);
-  due.forEach(({ i, d }) => {
-    if (d < 0) lines.push(`⚠️ ${i.nome} venceu há ${-d} dia${-d === 1 ? '' : 's'} — ${BRL(i.valorParcela)}`);
-    else if (d === 0) lines.push(`🔔 ${i.nome} vence hoje — ${BRL(i.valorParcela)}`);
-    else lines.push(`🔔 ${i.nome} vence em ${d} dia${d === 1 ? '' : 's'} (${dm(i.dataVencimento)}) — ${BRL(i.valorParcela)}`);
+  due.forEach(({ nome, valor, venc, d, icone }) => {
+    if (d < 0) lines.push(`⚠️ ${nome} venceu há ${-d} dia${-d === 1 ? '' : 's'} — ${BRL(valor)}`);
+    else if (d === 0) lines.push(`${icone} ${nome} vence hoje — ${BRL(valor)}`);
+    else lines.push(`${icone} ${nome} vence em ${d} dia${d === 1 ? '' : 's'} (${dm(venc)}) — ${BRL(valor)}`);
   });
 
   // 2) limites por categoria no mês atual
   const key = today.slice(0, 7);
   const start = key + '-01';
-  const end = key + '-' + String(lastDayOfMonth(key)).padStart(2, '0');
+  const end = key + '-' + pad(lastDayOfMonth(key));
   const cats = {};
   const bucket = c => cats[c] || (cats[c] = { pago: 0, previsto: 0 });
   payments.forEach(p => {
-    if (p.natureza === 'despesa' && (p.data || '').slice(0, 7) === key) bucket(p.categoria || 'Outros').pago += Number(p.valor) || 0;
+    if (p.natureza !== 'despesa' || (p.data || '').slice(0, 7) !== key) return;
+    if (p.tipo === 'fatura' || p.categoria === CARD_CAT) return;
+    bucket(p.categoria || 'Outros').pago += Number(p.valor) || 0;
   });
   items.forEach(i => {
     if (!DESPESA.has(i.tipo) || isDone(i) || !i.dataVencimento) return;
+    if (catOf(i) === CARD_CAT) return;
     if ((i.dataVencimento >= start && i.dataVencimento <= end) || i.dataVencimento < start) bucket(catOf(i)).previsto += Number(i.valorParcela) || 0;
   });
   Object.entries(cats).forEach(([c, v]) => {

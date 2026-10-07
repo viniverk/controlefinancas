@@ -41,6 +41,13 @@ Copie a chave e cole no `index.html`, no lugar de `COLE_AQUI_A_CHAVE_VAPID` (per
 GitHub → aba **Actions → Alertas diários no celular → Run workflow**. Marque “Modo teste” para só ver no log; desmarque para enviar de verdade.
 O envio automático acontece todo dia às 08:00 (Brasília).
 
+
+## Cartão de crédito
+1. Aba **Cartões → + Novo cartão**: informe o dia de **fechamento** e o de **vencimento** (aparecem na fatura do banco).
+2. **+ Compra no cartão**: cada compra entra na fatura certa e **conta no limite do mês da compra**.
+3. A **fatura** aparece sozinha em Lançamentos, Calendário e nos alertas, e é paga com o ✓. Só a fatura mexe no saldo/caixa; ela **não** conta de novo nos limites.
+4. Se você já lançou a fatura como uma conta comum (ex.: 10/10), troque a categoria dela para **“Cartão de crédito”** (fica fora dos limites) ou apague e use as compras.
+
 ## Observações
 - Só chega notificação se houver algo importante no dia (conta perto de vencer/atrasada ou limite ≥ % escolhido nas Configurações).
 - Se o repositório ficar 60 dias sem nenhuma alteração, o GitHub pausa agendamentos: é só reativar na aba Actions.
