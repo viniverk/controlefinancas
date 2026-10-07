@@ -57,7 +57,7 @@
   .mtop { position: sticky; top: 0; z-index: 30; background: rgba(250,250,249,.94); backdrop-filter: blur(6px); display: flex; align-items: center; gap: 12px; padding: 14px 32px; border-bottom: 1px solid var(--border); }
   .mtitle { margin: 0; font-size: 1.15rem; font-weight: 800; flex: 1; }
   .hamburger { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font-size: 1.1rem; cursor: pointer; align-items: center; justify-content: center; }
-  .content { padding: 26px 32px 80px; max-width: 920px; }
+  .content { padding: 26px 32px 80px; max-width: 1120px; }
 
   @media (max-width: 900px) {
     .sidebar { transform: translateX(-100%); width: 260px; }
@@ -103,10 +103,10 @@
   .ff-row-check { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: .82rem; flex-shrink: 0; }
   .ff-row-check:hover { background: var(--receita); color: #fff; border-color: var(--receita); }
 
-  .ff-list-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
-  .ff-list-controls select { font-family: inherit; font-size: .82rem; font-weight: 600; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .ff-list-controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; align-items: center; margin-bottom: 10px; }
+  .ff-list-controls select { width: 100%; font-family: inherit; font-size: .82rem; font-weight: 600; padding: 9px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
   .ff-list-total { font-size: .78rem; color: var(--text-soft); font-weight: 600; margin-bottom: 10px; }
-  .ff-toggle { font-size: .78rem; color: var(--text-soft); display: flex; align-items: center; gap: 6px; margin-left: auto; }
+  .ff-toggle { font-size: .8rem; color: var(--text-soft); display: flex; align-items: center; gap: 8px; }
 
   .ff-table-wrap { overflow-x: auto; }
   .ff-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
@@ -116,7 +116,6 @@
   .ff-table .ff-table-name { white-space: normal; font-weight: 600; min-width: 120px; }
   .ff-table .ff-table-value { font-weight: 700; }
   .ff-table .ff-table-value.receita { color: var(--receita); }
-  .ff-table .ff-table-status { display: flex; align-items: center; gap: 6px; }
   .ff-table-group-row td { padding: 16px 10px 4px; border-bottom: none; font-weight: 700; font-size: .78rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .03em; }
   .ff-trash { background: none; border: none; cursor: pointer; color: var(--text-soft); font-size: .95rem; padding: 4px 6px; }
   .ff-trash:hover { color: var(--danger); }
@@ -201,9 +200,15 @@
   .ff-summary > div:last-child { border-right: none; }
   .ff-summary span { display: block; font-size: .68rem; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: .03em; }
   .ff-summary b { display: block; font-size: 1.02rem; margin-top: 2px; font-weight: 800; white-space: nowrap; }
-  .ff-table.fixed { table-layout: fixed; min-width: 740px; }
-  .ff-table.fixed td { overflow: hidden; text-overflow: ellipsis; }
-  .ff-table.fixed .ff-table-name { white-space: nowrap; }
+  .ff-table tr.ff-row { display: table-row; padding: 0; gap: 0; border-bottom: none; cursor: pointer; }
+  .ff-table tr.ff-row:hover { background: rgba(0,0,0,.02); }
+  .ff-table.fixed { table-layout: fixed; min-width: 780px; }
+  .ff-table.fixed thead th { padding: 10px; }
+  .ff-table.fixed tbody td { padding: 13px 10px; vertical-align: middle; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
+  .ff-table.fixed td.ff-table-name { font-weight: 600; }
+  .ff-table.fixed td.ff-table-value, .ff-table.fixed td.ff-nowrap { white-space: nowrap; }
+  .ff-table.fixed td.ff-act { text-align: center; padding-left: 4px; padding-right: 4px; }
+  .ff-table-status .ff-dot { margin-right: 8px; vertical-align: middle; }
   .ff-table th.num, .ff-table td.num, .ff-table td.ff-table-value { text-align: right; }
   .ff-table-group-row.rec td { color: var(--receita); }
   .ff-table-group-row.des td { color: var(--danger); }
@@ -1289,12 +1294,12 @@
     const attr = e.kind === 'item' ? `data-id="${e.id}"` : e.kind === 'invoice' ? `data-inv="${e.cartaoId}|${e.key}"` : '';
     return `
       <tr class="ff-row ${e.kind === 'payment' ? 'ff-row-static' : ''}" ${attr}>
-        <td class="ff-table-name" title="${escapeHtml(e.nome)}">${escapeHtml(e.nome)}</td>
-        <td title="${escapeHtml(e.categoria)}">${escapeHtml(e.categoria || (rec ? 'Receita' : ''))}</td>
+        <td class="ff-table-name">${escapeHtml(e.nome)}</td>
+        <td>${escapeHtml(e.categoria || (rec ? 'Receita' : ''))}</td>
         <td class="ff-table-value ${rec ? 'pos' : 'neg'}">${signed(e.natureza, e.valor)}</td>
-        <td>${fmtDateFull(e.date)}</td>
+        <td class="ff-nowrap">${fmtDateFull(e.date)}</td>
         <td class="ff-table-status">${status}</td>
-        <td>${action}</td>
+        <td class="ff-act">${action}</td>
       </tr>`;
   }
   function renderList() {
