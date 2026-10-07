@@ -2,13 +2,20 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nossas Finanças</title>
+<meta name="theme-color" content="#173a32">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Finanças">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-  html, body { margin: 0; padding: 0; background: #fafaf9; min-height: 100vh; }
-
+  [hidden] { display: none !important; }
+  *, *::before, *::after { box-sizing: border-box; }
   :root {
     --bg: #fafaf9;
     --surface: #ffffff;
@@ -21,22 +28,48 @@
     --danger: #d64545;
     --warn: #e0a83d;
     --done: #b7beb8;
+    --sidebar: #173a32;
+    --sidebar-text: #cfe3dc;
   }
-  *, *::before, *::after { box-sizing: border-box; }
-  .ff-app {
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text);
-    background: var(--bg);
-    border-radius: 16px;
-    padding: 24px 20px;
-    min-height: 100%;
+  html, body { margin: 0; padding: 0; background: var(--bg); min-height: 100vh; }
+  body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); -webkit-text-size-adjust: 100%; }
+  button { font-family: inherit; }
+
+  /* ===== Estrutura: menu lateral + conteúdo ===== */
+  .sidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 240px; background: var(--sidebar); color: var(--sidebar-text); display: flex; flex-direction: column; padding: 20px 12px; z-index: 70; transition: transform .2s ease; overflow-y: auto; }
+  .sb-brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 22px; }
+  .sb-logo { width: 38px; height: 38px; border-radius: 11px; background: #2f6f5e; color: #fff; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sb-title { color: #fff; font-weight: 800; font-size: .98rem; line-height: 1.2; }
+  .sb-family { font-size: .72rem; color: #8fb3a6; margin-top: 2px; }
+  .sb-nav { display: flex; flex-direction: column; gap: 3px; }
+  .sb-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: none; background: transparent; color: var(--sidebar-text); font-weight: 600; font-size: .88rem; border-radius: 10px; cursor: pointer; text-align: left; }
+  .sb-item svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .sb-item:hover { background: rgba(255,255,255,.07); }
+  .sb-item.active { background: rgba(255,255,255,.14); color: #fff; }
+  .sb-spacer { flex: 1; min-height: 20px; }
+  .sb-user { display: flex; align-items: center; gap: 10px; padding: 12px 8px 4px; border-top: 1px solid rgba(255,255,255,.1); margin-top: 8px; }
+  .sb-avatar { width: 34px; height: 34px; border-radius: 50%; background: #2f6f5e; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sb-user-name { color: #fff; font-size: .82rem; font-weight: 600; word-break: break-word; }
+  .sb-logout { background: none; border: none; padding: 0; margin-top: 2px; color: #8fb3a6; font-size: .75rem; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .sb-backdrop { display: none; position: fixed; inset: 0; background: rgba(10,20,17,.5); z-index: 65; }
+
+  .main { margin-left: 240px; min-width: 0; }
+  .mtop { position: sticky; top: 0; z-index: 30; background: rgba(250,250,249,.94); backdrop-filter: blur(6px); display: flex; align-items: center; gap: 12px; padding: 14px 32px; border-bottom: 1px solid var(--border); }
+  .mtitle { margin: 0; font-size: 1.15rem; font-weight: 800; flex: 1; }
+  .hamburger { display: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font-size: 1.1rem; cursor: pointer; align-items: center; justify-content: center; }
+  .content { padding: 26px 32px 80px; max-width: 920px; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); width: 260px; }
+    body.menu-open .sidebar { transform: none; }
+    body.menu-open .sb-backdrop { display: block; }
+    .main { margin-left: 0; }
+    .hamburger { display: flex; }
+    .mtop { padding: 12px 16px; }
+    .content { padding: 18px 16px 90px; }
   }
-  .ff-wrap { max-width: 640px; margin: 0 auto; }
 
-  .ff-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-  .ff-brand-title { font-weight: 800; font-size: 1.2rem; margin: 0; }
-  .ff-topbar-actions { display: flex; gap: 8px; }
-
+  /* ===== Componentes ===== */
   .ff-btn { font-weight: 700; font-size: .84rem; border-radius: 10px; padding: 9px 15px; cursor: pointer; border: none; }
   .ff-btn-primary { background: var(--primary); color: #fff; }
   .ff-btn-primary:hover { background: var(--primary-hover); }
@@ -45,27 +78,22 @@
   .ff-btn-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
   .ff-btn-icon:hover { background: var(--bg); }
 
-  .ff-tabs { display: flex; gap: 2px; background: var(--border); padding: 3px; border-radius: 11px; margin-bottom: 20px; }
-  .ff-tab { flex: 1; font-weight: 700; font-size: .8rem; padding: 8px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-soft); cursor: pointer; }
-  .ff-tab.active { background: var(--surface); color: var(--text); }
-
-  .ff-hero { text-align: center; padding: 22px 10px 26px; }
+  .ff-hero { text-align: center; padding: 14px 10px 26px; }
   .ff-hero-label { font-size: .8rem; color: var(--text-soft); font-weight: 600; }
   .ff-hero-value { font-weight: 800; font-size: 2.4rem; margin: 4px 0 6px; letter-spacing: -.02em; }
-  .ff-hero-sub { font-size: .82rem; color: var(--text-soft); }
-  .ff-hero-sub .warn-text { color: var(--danger); font-weight: 700; }
+  .ff-hero-sub { font-size: .82rem; color: var(--text-soft); line-height: 1.6; }
 
-  .ff-section-title { font-weight: 700; font-size: .84rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .03em; margin: 22px 0 8px; }
-  .ff-empty-note { text-align: center; color: var(--text-soft); font-size: .86rem; padding: 26px 10px; }
+  .ff-section-title { font-weight: 700; font-size: .8rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .03em; margin: 26px 0 8px; display: flex; align-items: center; justify-content: space-between; }
+  .ff-link-inline { background: none; border: none; color: var(--primary); font-weight: 700; font-size: .78rem; cursor: pointer; text-transform: none; letter-spacing: 0; padding: 0; }
+  .ff-empty-note { text-align: center; color: var(--text-soft); font-size: .86rem; padding: 22px 10px; }
 
   .ff-row { display: flex; align-items: center; gap: 10px; padding: 12px 4px; border-bottom: 1px solid var(--border); cursor: pointer; }
   .ff-row:last-child { border-bottom: none; }
-  .ff-row:hover { background: var(--bg); }
-  .ff-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .ff-row:hover { background: rgba(0,0,0,.015); }
+  .ff-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
   .ff-dot.overdue { background: var(--danger); }
   .ff-dot.soon { background: var(--warn); }
   .ff-dot.ok { background: #c7ccc4; }
-  .ff-dot.scheduled { background: #dde1da; }
   .ff-dot.done { background: var(--receita); }
   .ff-row-body { flex: 1; min-width: 0; }
   .ff-row-name { font-weight: 600; font-size: .9rem; }
@@ -76,26 +104,58 @@
   .ff-row-check:hover { background: var(--receita); color: #fff; border-color: var(--receita); }
 
   .ff-list-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
-  .ff-list-controls select { font-family: 'Inter', sans-serif; font-size: .82rem; font-weight: 600; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .ff-list-controls select { font-family: inherit; font-size: .82rem; font-weight: 600; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
   .ff-list-total { font-size: .78rem; color: var(--text-soft); font-weight: 600; margin-bottom: 10px; }
   .ff-toggle { font-size: .78rem; color: var(--text-soft); display: flex; align-items: center; gap: 6px; margin-left: auto; }
 
-  /* Calendar */
+  .ff-table-wrap { overflow-x: auto; }
+  .ff-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  .ff-table thead th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; color: var(--text-soft); padding: 8px 10px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+  .ff-table tbody td { padding: 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .ff-table tbody tr.ff-row:hover { background: rgba(0,0,0,.015); }
+  .ff-table .ff-table-name { white-space: normal; font-weight: 600; min-width: 120px; }
+  .ff-table .ff-table-value { font-weight: 700; }
+  .ff-table .ff-table-value.receita { color: var(--receita); }
+  .ff-table .ff-table-status { display: flex; align-items: center; gap: 6px; }
+  .ff-table-group-row td { padding: 16px 10px 4px; border-bottom: none; font-weight: 700; font-size: .78rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .03em; }
+  .ff-trash { background: none; border: none; cursor: pointer; color: var(--text-soft); font-size: .95rem; padding: 4px 6px; }
+  .ff-trash:hover { color: var(--danger); }
+
+  /* Categorias e limites */
+  .bd-row { padding: 14px 4px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .bd-row:last-child { border-bottom: none; }
+  .bd-row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .bd-name { font-weight: 600; font-size: .92rem; }
+  .bd-amount { font-weight: 700; font-size: .9rem; white-space: nowrap; }
+  .bd-amount small { font-weight: 500; color: var(--text-soft); }
+  .bd-bar { height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; display: flex; margin-top: 9px; }
+  .bd-bar .paid { background: var(--primary); }
+  .bd-bar .pend { background: #a9cfc3; }
+  .bd-bar.near .paid { background: var(--warn); }
+  .bd-bar.near .pend { background: #f0d9a3; }
+  .bd-bar.over .paid { background: var(--danger); }
+  .bd-bar.over .pend { background: #efb3b3; }
+  .bd-note { font-size: .75rem; color: var(--text-soft); margin-top: 6px; }
+  .bd-note.near { color: #b07f1c; font-weight: 600; }
+  .bd-note.over { color: var(--danger); font-weight: 600; }
+  .bd-actions { display: flex; gap: 8px; margin: 4px 0 8px; flex-wrap: wrap; }
+
+  /* Calendário */
   .ff-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .ff-cal-month { font-weight: 800; font-size: 1rem; text-transform: capitalize; }
-  .ff-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .ff-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 560px; }
   .ff-cal-weekday { text-align: center; font-size: .68rem; font-weight: 700; color: var(--text-soft); padding-bottom: 4px; }
   .ff-cal-cell { aspect-ratio: 1; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
   .ff-cal-cell.outside { cursor: default; }
   .ff-cal-cell.outside .ff-cal-daynum { color: #d7dad3; }
-  .ff-cal-cell:not(.outside):hover { background: var(--bg); }
+  .ff-cal-cell:not(.outside):hover { background: rgba(0,0,0,.03); }
   .ff-cal-cell.today .ff-cal-daynum { color: var(--primary); font-weight: 800; }
   .ff-cal-cell.selected { background: var(--border); }
   .ff-cal-daynum { font-size: .78rem; font-weight: 600; }
+  .ff-day-detail { margin-top: 12px; max-width: 560px; }
+  .ff-day-detail h4 { font-weight: 700; font-size: .84rem; margin: 0 0 4px; color: var(--text-soft); }
 
-  .ff-day-detail { margin-top: 10px; }
-  .ff-day-detail h4 { font-weight: 700; font-size: .84rem; margin: 0 0 4px; text-transform: capitalize; color: var(--text-soft); }
-
+  /* Admin */
   .ff-admin-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
   .ff-admin-card.disabled { opacity: .6; }
   .ff-admin-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
@@ -105,18 +165,14 @@
   .ff-admin-actions { display: flex; gap: 8px; margin-top: 10px; }
   .ff-admin-actions .ff-btn { flex: 1; font-size: .78rem; padding: 7px 10px; }
 
-  /* Modal */
-  .ff-overlay { position: fixed; inset: 0; background: rgba(20, 24, 33, .55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 60; padding: 16px; display: flex; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
-  .ff-overlay[hidden] { display: none; }
-  #authOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
-  .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  /* Janelas (modais) */
+  .ff-overlay { position: fixed; inset: 0; background: rgba(20,24,33,.55); backdrop-filter: blur(3px); align-items: center; justify-content: center; z-index: 80; padding: 16px; display: flex; font-family: 'Inter', system-ui, sans-serif; color: var(--text); }
+  #authOverlay { background: var(--bg); backdrop-filter: none; z-index: 100; }
+  .ff-modal { background: var(--surface); border-radius: 16px; padding: 22px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
   .ff-modal h2 { font-size: 1.05rem; margin: 0 0 14px; }
   .ff-field { margin-bottom: 12px; }
   .ff-field label { display: block; font-size: .76rem; font-weight: 700; color: var(--text-soft); margin-bottom: 4px; }
-  .ff-field input, .ff-field select, .ff-field textarea {
-    width: 100%; font-family: 'Inter', sans-serif; font-size: .88rem; padding: 9px 11px;
-    border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text);
-  }
+  .ff-field input, .ff-field select, .ff-field textarea { width: 100%; font-family: inherit; font-size: .88rem; padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); }
   .ff-field input:focus, .ff-field select:focus, .ff-field textarea:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
   .ff-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .ff-check { display: flex; align-items: center; gap: 8px; font-size: .84rem; }
@@ -126,32 +182,30 @@
   .ff-link { background: none; border: none; color: var(--primary); font-weight: 700; font-size: .8rem; cursor: pointer; padding: 4px 0; margin-bottom: 8px; }
   .ff-delete-link { background: none; border: none; color: var(--danger); font-weight: 600; font-size: .8rem; cursor: pointer; }
 
-  .ff-settings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .ff-settings-row[hidden] { display: none; }
-  .ff-settings-row:last-child { border-bottom: none; }
+  .ff-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .ff-settings-row:last-of-type { border-bottom: none; }
   .ff-settings-label { font-size: .86rem; font-weight: 600; }
-  .ff-settings-sub { font-size: .74rem; color: var(--text-soft); margin-top: 2px; }
+  .ff-settings-sub { font-size: .74rem; color: var(--text-soft); margin-top: 2px; line-height: 1.4; }
+  .ff-settings-num { width: 70px; font-family: inherit; font-size: .88rem; padding: 7px 9px; border: 1px solid var(--border); border-radius: 9px; text-align: center; }
 
-  .ff-lock-card { background: var(--surface); border-radius: 16px; padding: 26px; width: 100%; max-width: 360px; }
+  .ff-lock-card { background: var(--surface); border-radius: 16px; padding: 26px; width: 100%; max-width: 360px; border: 1px solid var(--border); }
   .ff-lock-card h2 { font-size: 1.1rem; margin: 4px 0 6px; }
   .ff-lock-sub { font-size: .82rem; color: var(--text-soft); margin: 0 0 16px; line-height: 1.45; }
-  .ff-lock-actions { display: flex; gap: 10px; margin-top: 4px; }
-  .ff-lock-actions button { flex: 1; }
   .ff-lock-link { display: block; width: 100%; margin: 14px 0 0; background: none; border: none; color: var(--primary); font-size: .8rem; font-weight: 700; cursor: pointer; text-align: center; }
-  .ff-lock-link[hidden] { display: none; }
-  .ff-profile-btn { display: block; width: 100%; text-align: left; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-family: 'Inter', sans-serif; font-weight: 600; font-size: .86rem; color: var(--text); cursor: pointer; margin-bottom: 8px; }
-  .ff-profile-btn:hover { border-color: var(--primary); background: #f2f6f4; }
-  .ff-profile-divider { font-size: .72rem; color: var(--text-soft); text-align: center; margin: 4px 0 12px; }
 
-  @media (max-width: 480px) {
+  /* Aviso rápido (toast) */
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: #1f2320; color: #fff; padding: 12px 16px; border-radius: 12px; font-size: .84rem; display: flex; gap: 14px; align-items: center; z-index: 120; max-width: calc(100vw - 32px); box-shadow: 0 8px 28px rgba(0,0,0,.25); }
+  .toast button { background: none; border: none; color: #8fe0bf; font-weight: 700; font-size: .84rem; cursor: pointer; padding: 0; }
+
+  @media (max-width: 560px) {
     .ff-field-row { grid-template-columns: 1fr; }
-    .ff-hero-value { font-size: 1.9rem; }
+    .ff-hero-value { font-size: 2rem; }
   }
 </style>
 </head>
 <body>
 
-
+<!-- ===== Entrar / criar conta ===== -->
 <div class="ff-overlay" id="authOverlay">
   <div class="ff-lock-card">
     <div style="font-size:.7rem;letter-spacing:.06em;color:var(--primary);text-transform:uppercase;font-weight:700;">Nossas finanças</div>
@@ -181,37 +235,43 @@
   </div>
 </div>
 
-<div class="ff-app">
-  <div class="ff-wrap">
-    <div class="ff-topbar">
-      <div>
-        <p class="ff-brand-title">Nossas finanças</p>
-        <p id="userGreeting" style="font-size:.74rem;color:var(--text-soft);margin:2px 0 0;"></p>
-      </div>
-      <div class="ff-topbar-actions">
-        <button class="ff-btn-icon" id="btnSettings" title="Configurações">⚙️</button>
-        <button class="ff-btn ff-btn-primary" id="btnAdd">+ Adicionar</button>
-      </div>
+<!-- ===== App ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">$</div>
+    <div>
+      <div class="sb-title">Nossas finanças</div>
+      <div class="sb-family" id="sbFamily"></div>
     </div>
+  </div>
+  <nav class="sb-nav">
+    <button class="sb-item active" data-tab="overview"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+    <button class="sb-item" data-tab="list"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Lançamentos</button>
+    <button class="sb-item" data-tab="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendário</button>
+    <button class="sb-item" data-tab="budget"><svg viewBox="0 0 24 24"><path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Gastos e limites</button>
+    <button class="sb-item" data-tab="admin" id="adminTabBtn" hidden><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/></svg>Administração</button>
+  </nav>
+  <div class="sb-spacer"></div>
+  <button class="sb-item" id="btnSettings"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Configurações</button>
+  <div class="sb-user">
+    <div class="sb-avatar" id="sbAvatar">?</div>
+    <div>
+      <div class="sb-user-name" id="sbUserName">—</div>
+      <button class="sb-logout" id="btnLogoutSide" type="button">Sair</button>
+    </div>
+  </div>
+</aside>
+<div class="sb-backdrop" id="sbBackdrop"></div>
 
-    <nav class="ff-tabs">
-      <button class="ff-tab active" data-tab="overview">Início</button>
-      <button class="ff-tab" data-tab="calendar">Calendário</button>
-      <button class="ff-tab" data-tab="list">Lançamentos</button>
-      <button class="ff-tab" data-tab="admin" id="adminTabBtn" hidden>Admin</button>
-    </nav>
+<div class="main">
+  <header class="mtop">
+    <button class="hamburger" id="btnMenu" aria-label="Abrir menu">☰</button>
+    <h1 class="mtitle" id="pageTitle">Início</h1>
+    <button class="ff-btn ff-btn-primary" id="btnAdd">+ Adicionar</button>
+  </header>
 
+  <div class="content">
     <section id="panelOverview"></section>
-
-    <section id="panelCalendar" hidden>
-      <div class="ff-cal-header">
-        <button class="ff-btn-icon" id="calPrev">‹</button>
-        <div class="ff-cal-month" id="calMonthLabel"></div>
-        <button class="ff-btn-icon" id="calNext">›</button>
-      </div>
-      <div class="ff-cal-grid" id="calGrid"></div>
-      <div class="ff-day-detail" id="dayDetail" hidden></div>
-    </section>
 
     <section id="panelList" hidden>
       <div class="ff-list-controls">
@@ -231,7 +291,46 @@
         <label class="ff-toggle"><input type="checkbox" id="showDone"> mostrar concluídos</label>
       </div>
       <div class="ff-list-total" id="listTotal"></div>
-      <div id="listContent"></div>
+      <div class="ff-table-wrap">
+        <table class="ff-table">
+          <thead>
+            <tr><th>Nome</th><th>Categoria</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="listContent"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panelCalendar" hidden>
+      <div class="ff-cal-header" style="max-width:560px;">
+        <button class="ff-btn-icon" id="calPrev">‹</button>
+        <div class="ff-cal-month" id="calMonthLabel"></div>
+        <button class="ff-btn-icon" id="calNext">›</button>
+      </div>
+      <div class="ff-cal-grid" id="calGrid"></div>
+      <div class="ff-day-detail" id="dayDetail" hidden></div>
+    </section>
+
+    <section id="panelBudget" hidden>
+      <div class="ff-cal-header">
+        <button class="ff-btn-icon" id="budPrev">‹</button>
+        <div class="ff-cal-month" id="budMonthLabel"></div>
+        <button class="ff-btn-icon" id="budNext">›</button>
+      </div>
+      <div class="bd-actions">
+        <button class="ff-btn ff-btn-primary" id="btnNewExpense">+ Gasto avulso</button>
+        <button class="ff-btn ff-btn-ghost" id="btnNewLimit">Definir limite</button>
+      </div>
+      <div id="budgetCats"></div>
+      <div class="ff-section-title">Histórico do mês</div>
+      <div class="ff-table-wrap">
+        <table class="ff-table">
+          <thead>
+            <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr>
+          </thead>
+          <tbody id="budgetHistory"></tbody>
+        </table>
+      </div>
     </section>
 
     <section id="panelAdmin" hidden>
@@ -241,6 +340,9 @@
   </div>
 </div>
 
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="toastAction" type="button" hidden></button></div>
+
+<!-- ===== Lançamento ===== -->
 <div class="ff-overlay" id="modalOverlay" hidden>
   <form class="ff-modal" id="itemForm">
     <h2 id="formTitle">Novo lançamento</h2>
@@ -266,6 +368,11 @@
       <input id="fNome" type="text" placeholder="Ex: Financiamento do carro" required>
     </div>
 
+    <div class="ff-field" id="fCategoriaWrap">
+      <label>Categoria</label>
+      <select id="fCategoria"></select>
+    </div>
+
     <div class="ff-field-row">
       <div class="ff-field">
         <label id="fValorLabel">Valor (R$)</label>
@@ -280,11 +387,6 @@
     <button type="button" class="ff-link" id="toggleMore">+ Mais detalhes</button>
 
     <div id="moreDetails" hidden>
-      <div class="ff-field" id="fCategoriaWrap">
-        <label>Categoria</label>
-        <input id="fCategoria" type="text" placeholder="Ex: Moradia, Água, Internet">
-      </div>
-
       <div class="ff-field-row" id="fParcelasWrap">
         <div class="ff-field">
           <label>Total de parcelas</label>
@@ -295,11 +397,9 @@
           <input id="fParcelasPagas" type="number" min="0" value="0">
         </div>
       </div>
-
       <div class="ff-field" id="fContempladoWrap">
         <label class="ff-check"><input type="checkbox" id="fContemplado"> Já foi contemplado</label>
       </div>
-
       <div class="ff-field">
         <label>Observação</label>
         <textarea id="fObs" rows="2" placeholder="Banco, número do contrato, etc."></textarea>
@@ -310,7 +410,7 @@
 
     <div class="ff-modal-actions">
       <div style="display:flex; gap:14px;">
-        <button type="button" class="ff-delete-link" id="formDelete" hidden>Excluir lançamento</button>
+        <button type="button" class="ff-delete-link" id="formDelete" hidden>Excluir</button>
         <button type="button" class="ff-link" id="formDuplicate" hidden style="margin:0;">Duplicar</button>
       </div>
       <div style="display:flex; gap:10px; margin-left:auto;">
@@ -321,16 +421,103 @@
   </form>
 </div>
 
+<!-- ===== Gasto avulso ===== -->
+<div class="ff-overlay" id="expenseOverlay" hidden>
+  <form class="ff-modal" id="expenseForm">
+    <h2>Gasto avulso</h2>
+    <p class="ff-settings-sub" style="margin:-8px 0 14px;">Para o que não tem vencimento fixo: mercado, combustível, lanche…</p>
+    <div class="ff-field">
+      <label>Descrição</label>
+      <input id="eNome" type="text" placeholder="Ex: Mercado" required>
+    </div>
+    <div class="ff-field">
+      <label>Categoria</label>
+      <select id="eCategoria"></select>
+    </div>
+    <div class="ff-field-row">
+      <div class="ff-field">
+        <label>Valor (R$)</label>
+        <input id="eValor" type="number" min="0" step="0.01" required>
+      </div>
+      <div class="ff-field">
+        <label>Data</label>
+        <input id="eData" type="date" required>
+      </div>
+    </div>
+    <div class="ff-error" id="expenseError"></div>
+    <div class="ff-modal-actions">
+      <span></span>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="ff-btn ff-btn-ghost" id="expenseCancel">Cancelar</button>
+        <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Limite por categoria ===== -->
+<div class="ff-overlay" id="limitOverlay" hidden>
+  <form class="ff-modal" id="limitForm">
+    <h2>Limite de gastos</h2>
+    <div class="ff-field">
+      <label>Categoria</label>
+      <input id="lName" type="text" list="catList" placeholder="Escolha ou digite uma nova" required autocomplete="off">
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="ff-field">
+      <label>Limite mensal (R$)</label>
+      <input id="lValor" type="number" min="0" step="0.01" placeholder="Ex: 1000">
+    </div>
+    <div class="ff-error" id="limitError"></div>
+    <div class="ff-modal-actions">
+      <button type="button" class="ff-delete-link" id="limitRemove" hidden>Remover limite</button>
+      <div style="display:flex; gap:10px; margin-left:auto;">
+        <button type="button" class="ff-btn ff-btn-ghost" id="limitCancel">Cancelar</button>
+        <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Configurações ===== -->
 <div class="ff-overlay" id="settingsOverlay" hidden>
   <div class="ff-modal">
     <h2>Configurações</h2>
+
     <div class="ff-settings-row">
       <div>
-        <div class="ff-settings-label" id="logoutRowLabel">Você está como: —</div>
-        <div class="ff-settings-sub">Sai da sua conta neste aparelho.</div>
+        <div class="ff-settings-label">Notificações no celular</div>
+        <div class="ff-settings-sub" id="pushStatus">Receba avisos de contas perto de vencer e de limites quase estourados.</div>
       </div>
-      <button class="ff-btn ff-btn-ghost" id="btnLogout">Sair</button>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <button class="ff-btn ff-btn-primary" id="btnPush" type="button">Ativar</button>
+        <button class="ff-btn ff-btn-ghost" id="btnPushTest" type="button" hidden>Testar</button>
+      </div>
     </div>
+
+    <div class="ff-settings-row">
+      <div>
+        <div class="ff-settings-label">Avisar vencimentos</div>
+        <div class="ff-settings-sub">Quantos dias antes de a conta vencer.</div>
+      </div>
+      <input class="ff-settings-num" id="sAlertDias" type="number" min="0" max="30">
+    </div>
+    <div class="ff-settings-row">
+      <div>
+        <div class="ff-settings-label">Avisar limite em</div>
+        <div class="ff-settings-sub">Percentual do limite da categoria (%).</div>
+      </div>
+      <input class="ff-settings-num" id="sAlertPct" type="number" min="1" max="100">
+    </div>
+
+    <div class="ff-settings-row">
+      <div>
+        <div class="ff-settings-label">Instalar como aplicativo</div>
+        <div class="ff-settings-sub">Android (Chrome): menu ⋮ → Instalar app.<br>iPhone (Safari): Compartilhar → Adicionar à Tela de Início.</div>
+      </div>
+      <button class="ff-btn ff-btn-ghost" id="btnInstall" type="button" hidden>Instalar</button>
+    </div>
+
     <div class="ff-settings-row" style="display:block;">
       <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
         <div>
@@ -340,18 +527,9 @@
         <button class="ff-btn ff-btn-ghost" id="btnChangePassword" type="button">Alterar</button>
       </div>
       <div id="changePasswordForm" hidden style="margin-top:12px;">
-        <div class="ff-field">
-          <label>Senha atual</label>
-          <input type="password" id="cpCurrent" autocomplete="current-password">
-        </div>
-        <div class="ff-field">
-          <label>Nova senha</label>
-          <input type="password" id="cpNew" autocomplete="new-password" minlength="6">
-        </div>
-        <div class="ff-field">
-          <label>Confirmar nova senha</label>
-          <input type="password" id="cpConfirm" autocomplete="new-password" minlength="6">
-        </div>
+        <div class="ff-field"><label>Senha atual</label><input type="password" id="cpCurrent" autocomplete="current-password"></div>
+        <div class="ff-field"><label>Nova senha</label><input type="password" id="cpNew" autocomplete="new-password" minlength="6"></div>
+        <div class="ff-field"><label>Confirmar nova senha</label><input type="password" id="cpConfirm" autocomplete="new-password" minlength="6"></div>
         <div class="ff-error" id="cpError"></div>
         <div style="display:flex; gap:10px;">
           <button type="button" class="ff-btn ff-btn-ghost" id="cpCancel">Cancelar</button>
@@ -359,6 +537,7 @@
         </div>
       </div>
     </div>
+
     <div class="ff-settings-row">
       <div>
         <div class="ff-settings-label">Exportar dados</div>
@@ -374,8 +553,18 @@
       <button class="ff-btn ff-btn-ghost" id="btnImport">Importar</button>
       <input type="file" id="importFile" accept="application/json" hidden>
     </div>
+
+    <div class="ff-settings-row">
+      <div>
+        <div class="ff-settings-label" id="logoutRowLabel">Você está como: —</div>
+        <div class="ff-settings-sub">Sai da sua conta neste aparelho.</div>
+      </div>
+      <button class="ff-btn ff-btn-ghost" id="btnLogout">Sair</button>
+    </div>
+
     <div class="ff-modal-actions">
-      <button type="button" class="ff-btn ff-btn-primary" id="settingsClose" style="margin-left:auto;">Fechar</button>
+      <span></span>
+      <button type="button" class="ff-btn ff-btn-primary" id="settingsClose">Fechar</button>
     </div>
   </div>
 </div>
@@ -383,11 +572,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <script>
-  // ====================================================================
-  // COLE AQUI a configuração do SEU projeto Firebase (veja o passo a passo
-  // que te mandei — Configurações do projeto > Seus apps > ícone </>).
-  // ====================================================================
+  // Configuração pública do projeto Firebase (não é segredo; a proteção está nas regras do banco).
   const firebaseConfig = {
     apiKey: "AIzaSyAOpm4-OkBelk3oElT55Tm3jx1E34CYcF0",
     authDomain: "financaspessoais-92164.firebaseapp.com",
@@ -397,20 +584,31 @@
     messagingSenderId: "261263856158",
     appId: "1:261263856158:web:47652fa99b7df0da4cd40f"
   };
+  // Chave das notificações: Firebase → Configurações do projeto → Cloud Messaging →
+  // "Certificados push da Web" → Gerar par de chaves → cole a chave pública aqui.
+  const VAPID_KEY = "COLE_AQUI_A_CHAVE_VAPID";
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const auth = firebase.auth();
 </script>
 <script>
 (function () {
+  'use strict';
+
+  // =====================================================================
+  // Estado
+  // =====================================================================
   let items = [];
+  let payments = [];
+  let settings = defaultSettings();
   let editingId = null;
   let activeListFilter = 'todos';
   let activeListSort = 'vencimento';
   let showDone = false;
   let activeTab = 'overview';
-  let calYear, calMonth;
-  let selectedDay = null;
+  let calYear, calMonth, selectedDay = null;
+  let budYear, budMonth;
 
   const TIPOS = {
     conta: { label: 'Conta fixa', natureza: 'despesa' },
@@ -420,23 +618,60 @@
     salario: { label: 'Salário', natureza: 'receita' },
     renda_extra: { label: 'Renda extra', natureza: 'receita' }
   };
+  const DEFAULT_CATS = ['Moradia', 'Contas de casa', 'Alimentação', 'Transporte', 'Saúde', 'Educação', 'Lazer', 'Financiamentos', 'Outros'];
+  const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const PAGE_TITLES = { overview: 'Início', list: 'Lançamentos', calendar: 'Calendário', budget: 'Gastos e limites', admin: 'Administração' };
+  const PANELS = { overview: 'panelOverview', list: 'panelList', calendar: 'panelCalendar', budget: 'panelBudget', admin: 'panelAdmin' };
+  const GROUP_LABELS = { conta: 'Contas fixas', credito: 'Financiamentos & Empréstimos', consorcio: 'Consórcios', receita: 'Receitas' };
+  const STATUS_RANK = { overdue: 0, soon: 1, ok: 2, done: 3 };
 
+  function defaultSettings() { return { limites: {}, categorias: [], alertaDias: 3, alertaPct: 80 }; }
+
+  // =====================================================================
+  // Utilitários
+  // =====================================================================
+  const $ = id => document.getElementById(id);
   const fmtMoney = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+  const uid = () => (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2));
   const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-  const escapeHtml = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const escapeHtml = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const monthName = m => MONTHS[m].charAt(0).toUpperCase() + MONTHS[m].slice(1);
+  function isoDate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+  function parseISO(s) { return new Date(s + 'T00:00:00'); }
+  function fmtDateShort(d) { return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`; }
+  function fmtDateFull(d) { return `${fmtDateShort(d)}/${d.getFullYear()}`; }
+  function isParcelado(tipo) { return tipo === 'financiamento' || tipo === 'emprestimo' || tipo === 'consorcio'; }
 
-  const now = new Date();
-  calYear = now.getFullYear();
-  calMonth = now.getMonth();
+  let toastTimer = null;
+  function hideToast() { $('toast').hidden = true; }
+  function showToast(msg, opts) {
+    opts = opts || {};
+    $('toastMsg').textContent = msg;
+    const act = $('toastAction');
+    if (opts.actionLabel) {
+      act.textContent = opts.actionLabel; act.hidden = false;
+      act.onclick = () => { hideToast(); if (opts.onAction) opts.onAction(); };
+    } else { act.hidden = true; act.onclick = null; }
+    $('toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, opts.ms || 6000);
+  }
 
-  // ---- Data (Firebase Realtime Database — scoped to the logged-in family) ----
+  // =====================================================================
+  // Dados (Firebase Realtime Database — separados por família)
+  // =====================================================================
   let currentUid = null;
-  let itemsListenerRef = null;
+  let dbListeners = [];
+  let permWarned = false;
 
-  function itemsRef() { return db.ref('users/' + currentUid + '/items'); }
-  function profileRef(uidArg) { return db.ref('users/' + uidArg + '/profile'); }
-
+  function warnPerm(err) {
+    console.error(err);
+    if (!permWarned) {
+      permWarned = true;
+      showToast('Sem permissão para salvar/ler no banco. Atualize as regras do Realtime Database (veja o README).', { ms: 10000 });
+    }
+  }
   function migrateItem(item) {
     if (!item.dataVencimento && item.diaVencimento) {
       const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -450,34 +685,44 @@
       delete item.diaVencimento;
       delete item.ultimoPagamento;
     }
-    if (!item.primeiroVencimento) {
-      item.primeiroVencimento = item.dataVencimento;
-    }
+    if (!item.primeiroVencimento) item.primeiroVencimento = item.dataVencimento;
     return item;
   }
   function startDataSync() {
     stopDataSync();
-    itemsListenerRef = itemsRef();
-    itemsListenerRef.on('value', snapshot => {
-      const val = snapshot.val();
-      try { items = val ? JSON.parse(val).map(migrateItem) : []; } catch (e) { items = []; }
-      renderAll();
+    const base = 'users/' + currentUid + '/';
+    const bind = (child, apply) => {
+      const ref = db.ref(base + child);
+      ref.on('value', snap => { apply(snap.val()); renderAll(); }, warnPerm);
+      dbListeners.push(ref);
+    };
+    bind('items', v => { try { items = v ? JSON.parse(v).map(migrateItem) : []; } catch (e) { items = []; } });
+    bind('payments', v => { try { payments = v ? JSON.parse(v) : []; } catch (e) { payments = []; } });
+    bind('settings', v => {
+      try { settings = Object.assign(defaultSettings(), v ? JSON.parse(v) : {}); } catch (e) { settings = defaultSettings(); }
+      if (!settings.limites) settings.limites = {};
+      if (!Array.isArray(settings.categorias)) settings.categorias = [];
     });
   }
   function stopDataSync() {
-    if (itemsListenerRef) { itemsListenerRef.off(); itemsListenerRef = null; }
-    items = [];
+    dbListeners.forEach(r => r.off());
+    dbListeners = [];
+    items = []; payments = []; settings = defaultSettings();
   }
-  function saveData() {
-    if (!currentUid) return;
-    try { itemsRef().set(JSON.stringify(items)); }
-    catch (e) { console.error('Erro ao salvar', e); }
+  function fbSave(updates) {
+    if (!currentUid) return Promise.resolve();
+    return Promise.resolve(db.ref('users/' + currentUid).update(updates)).catch(warnPerm);
   }
+  const saveItems = () => fbSave({ items: JSON.stringify(items) });
+  const savePayments = () => fbSave({ payments: JSON.stringify(payments) });
+  const saveSettings = () => fbSave({ settings: JSON.stringify(settings) });
+  const saveItemsAndPayments = () => fbSave({ items: JSON.stringify(items), payments: JSON.stringify(payments) });
+
   function exportData() {
-    const blob = new Blob([JSON.stringify({ items }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ items, payments, settings }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `financas-familia-${new Date().toISOString().slice(0, 10)}.json`;
+    a.href = url; a.download = `financas-familia-${isoDate(new Date())}.json`;
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }
   function importData(file) {
@@ -488,26 +733,33 @@
         const incoming = Array.isArray(parsed) ? parsed : parsed.items;
         if (!Array.isArray(incoming)) throw new Error('formato inválido');
         const merge = confirm(`Encontrei ${incoming.length} lançamento(s).\n\nOK = mesclar com os atuais\nCancelar = substituir tudo`);
+        const inPay = Array.isArray(parsed.payments) ? parsed.payments : [];
         if (merge) {
-          const existingIds = new Set(items.map(i => i.id));
-          incoming.forEach(i => { if (!existingIds.has(i.id)) items.push(i); });
-        } else { items = incoming; }
-        saveData(); renderAll();
+          const ids = new Set(items.map(i => i.id));
+          incoming.forEach(i => { if (!ids.has(i.id)) items.push(migrateItem(i)); });
+          const pids = new Set(payments.map(p => p.id));
+          inPay.forEach(p => { if (!pids.has(p.id)) payments.push(p); });
+        } else {
+          items = incoming.map(migrateItem);
+          payments = inPay;
+          if (parsed.settings) settings = Object.assign(defaultSettings(), parsed.settings);
+        }
+        saveItemsAndPayments(); saveSettings(); renderAll();
         alert('Dados importados com sucesso.');
       } catch (err) { alert('Não consegui ler esse arquivo.'); }
     };
     reader.readAsText(file);
   }
 
-  // ---- Status helpers ----
-  function isoDate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-  function getNextDue(item) { return new Date(item.dataVencimento + 'T00:00:00'); }
+  // =====================================================================
+  // Regras de vencimento e status
+  // =====================================================================
+  function getNextDue(item) { return parseISO(item.dataVencimento); }
   function advanceOneMonth(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
+    const d = parseISO(dateStr);
     let m = d.getMonth() + 1, y = d.getFullYear();
     if (m > 11) { m = 0; y += 1; }
-    const newDay = Math.min(d.getDate(), daysInMonth(y, m));
-    return isoDate(new Date(y, m, newDay));
+    return isoDate(new Date(y, m, Math.min(d.getDate(), daysInMonth(y, m))));
   }
   function getStatus(item) {
     if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) return { status: 'done' };
@@ -518,22 +770,99 @@
     if (diffDays < 0) status = 'overdue'; else if (diffDays <= 7) status = 'soon';
     return { status, due, diffDays };
   }
-  function verb(nat) { return nat === 'receita' ? 'Recebe' : 'Vence'; }
-  function verbPast(nat) { return nat === 'receita' ? 'Não recebido' : 'Venceu'; }
   function dueText(nat, info) {
+    const v = nat === 'receita' ? 'Recebe' : 'Vence';
+    const vp = nat === 'receita' ? 'Não recebido' : 'Venceu';
     if (info.status === 'done') return nat === 'receita' ? 'Recebido' : 'Quitado';
-    if (info.diffDays === 0) return `${verb(nat)} hoje`;
-    if (info.diffDays === 1) return `${verb(nat)} amanhã`;
-    if (info.diffDays > 1) return `${verb(nat)} em ${info.diffDays} dias`;
-    if (info.diffDays === -1) return `${verbPast(nat)} há 1 dia`;
-    return `${verbPast(nat)} há ${Math.abs(info.diffDays)} dias`;
+    if (info.diffDays === 0) return `${v} hoje`;
+    if (info.diffDays === 1) return `${v} amanhã`;
+    if (info.diffDays > 1) return `${v} em ${info.diffDays} dias`;
+    if (info.diffDays === -1) return `${vp} há 1 dia`;
+    return `${vp} há ${Math.abs(info.diffDays)} dias`;
   }
-  function fmtDateShort(d) { return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`; }
 
-  // ---- Minimal row component ----
+  // =====================================================================
+  // Categorias, gastos do mês, limites e alertas
+  // =====================================================================
+  function defaultCatForTipo(tipo) {
+    if (isParcelado(tipo)) return 'Financiamentos';
+    if (tipo === 'conta') return 'Contas de casa';
+    return 'Outros';
+  }
+  function catOf(item) { return item.categoria || defaultCatForTipo(item.tipo); }
+  function allCategories() {
+    const set = new Set(DEFAULT_CATS);
+    (settings.categorias || []).forEach(c => set.add(c));
+    items.forEach(i => { if (TIPOS[i.tipo] && TIPOS[i.tipo].natureza === 'despesa') set.add(catOf(i)); });
+    payments.forEach(p => { if (p.natureza === 'despesa') set.add(p.categoria || 'Outros'); });
+    Object.keys(settings.limites || {}).forEach(c => set.add(c));
+    return Array.from(set);
+  }
+  function addCustomCategory(name) {
+    if (!allCategories().includes(name)) { settings.categorias.push(name); saveSettings(); }
+  }
+  function limitOf(cat) { return Number((settings.limites || {})[cat]) || 0; }
+  function limitStatus(total, limit) {
+    if (!(limit > 0)) return null;
+    const pct = total / limit * 100;
+    const level = pct >= 100 ? 'over' : (pct >= (Number(settings.alertaPct) || 80) ? 'near' : 'ok');
+    return { pct, level };
+  }
+
+  function monthStats(y, m) {
+    const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const isCurrent = today.getFullYear() === y && today.getMonth() === m;
+    const start = new Date(y, m, 1), end = new Date(y, m + 1, 0);
+    const out = { receitaPaga: 0, receitaPrev: 0, despesaPaga: 0, despesaPrev: 0, cats: {}, paidList: [], pendList: [] };
+    const cat = c => out.cats[c] || (out.cats[c] = { pago: 0, previsto: 0 });
+    payments.filter(p => (p.data || '').slice(0, 7) === key).forEach(p => {
+      const v = Number(p.valor) || 0;
+      if (p.natureza === 'receita') out.receitaPaga += v;
+      else { out.despesaPaga += v; cat(p.categoria || 'Outros').pago += v; }
+      out.paidList.push(p);
+    });
+    items.forEach(i => {
+      const st = getStatus(i);
+      if (st.status === 'done') return;
+      const d = st.due;
+      if (!((d >= start && d <= end) || (isCurrent && d < start))) return;
+      const v = Number(i.valorParcela) || 0;
+      if (TIPOS[i.tipo].natureza === 'receita') out.receitaPrev += v;
+      else { out.despesaPrev += v; cat(catOf(i)).previsto += v; }
+      out.pendList.push(i);
+    });
+    return out;
+  }
+
+  function computeAlerts() {
+    const out = [];
+    const dias = Number(settings.alertaDias);
+    const limiteDias = isNaN(dias) ? 3 : dias;
+    items.forEach(i => {
+      if (TIPOS[i.tipo].natureza !== 'despesa') return;
+      const st = getStatus(i);
+      if (st.status === 'done') return;
+      if (st.diffDays <= limiteDias) out.push({ kind: st.diffDays < 0 ? 'overdue' : 'due', diff: st.diffDays, item: i });
+    });
+    out.sort((a, b) => a.diff - b.diff);
+    const now = new Date();
+    const ms = monthStats(now.getFullYear(), now.getMonth());
+    Object.entries(ms.cats).forEach(([c, v]) => {
+      const lim = limitOf(c);
+      const total = v.pago + v.previsto;
+      const ls = limitStatus(total, lim);
+      if (ls && ls.level !== 'ok') out.push({ kind: ls.level === 'over' ? 'limit-over' : 'limit-near', cat: c, pct: ls.pct, total, limit: lim });
+    });
+    return out;
+  }
+
+  // =====================================================================
+  // Linhas reutilizáveis
+  // =====================================================================
   function rowHtml(item, info) {
     const nat = TIPOS[item.tipo].natureza;
-    const tag = item.tipo === 'conta' ? (item.categoria || TIPOS[item.tipo].label) : TIPOS[item.tipo].label;
+    const tag = nat === 'despesa' ? catOf(item) : TIPOS[item.tipo].label;
     const dateLabel = info.due ? ` · ${fmtDateShort(info.due)}` : '';
     return `
       <div class="ff-row" data-id="${item.id}">
@@ -544,42 +873,93 @@
         </div>
         <div class="ff-row-value ${nat}">${fmtMoney(item.valorParcela)}</div>
         ${info.status !== 'done' ? `<button class="ff-row-check" data-action="pay" title="Marcar como ${nat === 'receita' ? 'recebido' : 'pago'}">✓</button>` : ''}
-      </div>
-    `;
+      </div>`;
+  }
+  function tableRowHtml(item, info) {
+    const nat = TIPOS[item.tipo].natureza;
+    const tag = nat === 'despesa' ? catOf(item) : TIPOS[item.tipo].label;
+    return `
+      <tr class="ff-row" data-id="${item.id}">
+        <td class="ff-table-name">${escapeHtml(item.nome)}</td>
+        <td>${escapeHtml(tag)}</td>
+        <td class="ff-table-value ${nat}">${fmtMoney(item.valorParcela)}</td>
+        <td>${info.due ? fmtDateFull(info.due) : '—'}</td>
+        <td class="ff-table-status"><span class="ff-dot ${info.status}"></span>${dueText(nat, info)}</td>
+        <td>${info.status !== 'done' ? `<button class="ff-row-check" data-action="pay" title="Marcar como ${nat === 'receita' ? 'recebido' : 'pago'}">✓</button>` : ''}</td>
+      </tr>`;
+  }
+  function barHtml(pago, prev, limit) {
+    if (!(limit > 0)) return '';
+    const ls = limitStatus(pago + prev, limit);
+    const pPago = Math.min(100, pago / limit * 100);
+    const pPrev = Math.min(100 - pPago, prev / limit * 100);
+    return `<div class="bd-bar ${ls.level}"><span class="paid" style="width:${pPago}%"></span><span class="pend" style="width:${pPrev}%"></span></div>`;
+  }
+  function catRowHtml(c, v, goto) {
+    const total = v.pago + v.previsto;
+    const lim = limitOf(c);
+    const ls = limitStatus(total, lim);
+    let note = '';
+    if (!ls) note = `<div class="bd-note">Sem limite definido · pago ${fmtMoney(v.pago)}${v.previsto ? ` · a pagar ${fmtMoney(v.previsto)}` : ''}</div>`;
+    else if (ls.level === 'over') note = `<div class="bd-note over">Acima do limite em ${fmtMoney(total - lim)} · pago ${fmtMoney(v.pago)}${v.previsto ? ` · a pagar ${fmtMoney(v.previsto)}` : ''}</div>`;
+    else if (ls.level === 'near') note = `<div class="bd-note near">Perto do limite (${Math.round(ls.pct)}%) · resta ${fmtMoney(lim - total)}</div>`;
+    else note = `<div class="bd-note">Dentro do limite · resta ${fmtMoney(lim - total)}</div>`;
+    return `
+      <div class="bd-row" ${goto ? 'data-goto="budget"' : `data-cat="${escapeHtml(c)}"`}>
+        <div class="bd-row-top">
+          <span class="bd-name">${escapeHtml(c)}</span>
+          <span class="bd-amount">${fmtMoney(total)}${lim > 0 ? ` <small>de ${fmtMoney(lim)}</small>` : ''}</span>
+        </div>
+        ${barHtml(v.pago, v.previsto, lim)}
+        ${note}
+      </div>`;
   }
 
-  // ---- Overview ----
+  // =====================================================================
+  // Página: Início
+  // =====================================================================
   function renderOverview() {
-    const el = document.getElementById('panelOverview');
-    const active = items.filter(i => getStatus(i).status !== 'done');
-    const receitas = active.filter(i => TIPOS[i.tipo].natureza === 'receita');
-    const despesas = active.filter(i => TIPOS[i.tipo].natureza === 'despesa');
-    const totalReceitas = receitas.reduce((s, i) => s + Number(i.valorParcela || 0), 0);
-    const totalDespesas = despesas.reduce((s, i) => s + Number(i.valorParcela || 0), 0);
-    const saldo = totalReceitas - totalDespesas;
-    const overdueCount = active.filter(i => getStatus(i).status === 'overdue').length;
+    const now = new Date();
+    const ms = monthStats(now.getFullYear(), now.getMonth());
+    const rec = ms.receitaPaga + ms.receitaPrev;
+    const des = ms.despesaPaga + ms.despesaPrev;
+    const saldo = rec - des;
+    const alerts = computeAlerts();
 
-    const attention = active
-      .map(i => ({ item: i, info: getStatus(i) }))
-      .filter(x => x.info.status === 'overdue' || x.info.status === 'soon')
-      .sort((a, b) => a.info.diffDays - b.info.diffDays);
+    const alertsHtml = alerts.map(a => {
+      if (a.item) return rowHtml(a.item, getStatus(a.item));
+      const over = a.kind === 'limit-over';
+      return `
+        <div class="ff-row" data-goto="budget">
+          <span class="ff-dot ${over ? 'overdue' : 'soon'}"></span>
+          <div class="ff-row-body">
+            <div class="ff-row-name">${escapeHtml(a.cat)} — ${over ? 'limite estourado' : 'perto do limite'}</div>
+            <div class="ff-row-sub">${fmtMoney(a.total)} de ${fmtMoney(a.limit)} (${Math.round(a.pct)}%)</div>
+          </div>
+        </div>`;
+    }).join('');
 
-    el.innerHTML = `
+    const cats = Object.entries(ms.cats)
+      .filter(([, v]) => v.pago + v.previsto > 0)
+      .sort((a, b) => (b[1].pago + b[1].previsto) - (a[1].pago + a[1].previsto))
+      .slice(0, 6);
+
+    $('panelOverview').innerHTML = `
       <div class="ff-hero">
-        <div class="ff-hero-label">Saldo previsto do mês</div>
+        <div class="ff-hero-label">Saldo previsto de ${monthName(now.getMonth())}</div>
         <div class="ff-hero-value" style="color:${saldo >= 0 ? 'var(--primary)' : 'var(--danger)'}">${fmtMoney(saldo)}</div>
-        <div class="ff-hero-sub">Receitas ${fmtMoney(totalReceitas)} · Despesas ${fmtMoney(totalDespesas)}${overdueCount ? ` · <span class="warn-text">${overdueCount} em atraso</span>` : ''}</div>
+        <div class="ff-hero-sub">Receitas ${fmtMoney(rec)} · Despesas ${fmtMoney(des)}</div>
+        <div class="ff-hero-sub">Já recebido ${fmtMoney(ms.receitaPaga)} · Já pago ${fmtMoney(ms.despesaPaga)}</div>
       </div>
-      <div class="ff-section-title">Precisa de atenção</div>
-      <div id="attentionList"></div>
-    `;
-    const listEl = document.getElementById('attentionList');
-    listEl.innerHTML = attention.length
-      ? attention.map(x => rowHtml(x.item, x.info)).join('')
-      : `<div class="ff-empty-note">Tudo em dia por aqui. 🎉</div>`;
+      <div class="ff-section-title">Atenção</div>
+      <div>${alertsHtml || '<div class="ff-empty-note">Tudo em dia por aqui. 🎉</div>'}</div>
+      <div class="ff-section-title"><span>Gastos por categoria</span><button class="ff-link-inline" data-goto="budget">ver tudo</button></div>
+      <div>${cats.length ? cats.map(([c, v]) => catRowHtml(c, v, true)).join('') : '<div class="ff-empty-note">Ainda sem gastos neste mês.</div>'}</div>`;
   }
 
-  // ---- List tab ----
+  // =====================================================================
+  // Página: Lançamentos (tabela)
+  // =====================================================================
   function matchesFilter(item) {
     if (activeListFilter === 'todos') return true;
     if (activeListFilter === 'credito') return item.tipo === 'financiamento' || item.tipo === 'emprestimo';
@@ -587,23 +967,13 @@
     return item.tipo === activeListFilter;
   }
   function sortRows(rows) {
-    const sorted = [...rows];
-    if (activeListSort === 'valor-desc') {
-      sorted.sort((a, b) => Number(b.item.valorParcela) - Number(a.item.valorParcela));
-    } else if (activeListSort === 'valor-asc') {
-      sorted.sort((a, b) => Number(a.item.valorParcela) - Number(b.item.valorParcela));
-    } else if (activeListSort === 'nome') {
-      sorted.sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR'));
-    } else {
-      sorted.sort((a, b) => {
-        const da = a.info.status === 'done' ? Infinity : a.info.diffDays;
-        const db = b.info.status === 'done' ? Infinity : b.info.diffDays;
-        return da - db;
-      });
-    }
+    const sorted = rows.slice();
+    if (activeListSort === 'valor-desc') sorted.sort((a, b) => Number(b.item.valorParcela) - Number(a.item.valorParcela));
+    else if (activeListSort === 'valor-asc') sorted.sort((a, b) => Number(a.item.valorParcela) - Number(b.item.valorParcela));
+    else if (activeListSort === 'nome') sorted.sort((a, b) => a.item.nome.localeCompare(b.item.nome, 'pt-BR'));
+    else sorted.sort((a, b) => (a.info.status === 'done' ? Infinity : a.info.diffDays) - (b.info.status === 'done' ? Infinity : b.info.diffDays));
     return sorted;
   }
-  const GROUP_LABELS = { conta: 'Contas fixas', credito: 'Financiamentos & Empréstimos', consorcio: 'Consórcios', receita: 'Receitas' };
   function groupKey(item) {
     if (item.tipo === 'financiamento' || item.tipo === 'emprestimo') return 'credito';
     if (item.tipo === 'consorcio') return 'consorcio';
@@ -611,213 +981,290 @@
     return 'conta';
   }
   function renderList() {
-    const filtered = items
-      .filter(matchesFilter)
-      .map(i => ({ item: i, info: getStatus(i) }))
-      .filter(x => showDone || x.info.status !== 'done');
-
-    const totalEl = document.getElementById('listTotal');
+    const filtered = items.filter(matchesFilter).map(i => ({ item: i, info: getStatus(i) })).filter(x => showDone || x.info.status !== 'done');
     const totalValue = filtered.reduce((s, x) => s + Number(x.item.valorParcela || 0), 0);
-    totalEl.textContent = filtered.length
-      ? `${filtered.length} lançamento${filtered.length === 1 ? '' : 's'} · ${fmtMoney(totalValue)}`
-      : '';
-
+    $('listTotal').textContent = filtered.length ? `${filtered.length} lançamento${filtered.length === 1 ? '' : 's'} · ${fmtMoney(totalValue)}` : '';
     const rows = sortRows(filtered);
-    const el = document.getElementById('listContent');
+    const el = $('listContent');
     if (!rows.length) {
-      el.innerHTML = `
-        <div class="ff-empty-note">
-          <p style="margin:0 0 12px;">${items.length ? 'Nada por aqui com esse filtro.' : 'Nenhum lançamento ainda.'}</p>
-          <button class="ff-btn ff-btn-primary" id="listEmptyAdd">+ Adicionar</button>
-        </div>`;
-      const b = document.getElementById('listEmptyAdd');
-      if (b) b.addEventListener('click', () => openItemModal());
+      el.innerHTML = `<tr><td colspan="6"><div class="ff-empty-note"><p style="margin:0 0 12px;">${items.length ? 'Nada por aqui com esse filtro.' : 'Nenhum lançamento ainda.'}</p><button class="ff-btn ff-btn-primary" id="listEmptyAdd">+ Adicionar</button></div></td></tr>`;
+      const b = $('listEmptyAdd'); if (b) b.addEventListener('click', () => openItemModal());
       return;
     }
-
-    if (activeListFilter === 'todos') {
+    if (activeListFilter === 'todos' && activeListSort === 'vencimento') {
       const groups = { conta: [], credito: [], consorcio: [], receita: [] };
       rows.forEach(x => groups[groupKey(x.item)].push(x));
-      el.innerHTML = Object.entries(groups)
-        .filter(([, v]) => v.length)
-        .map(([k, v]) => `
-          <div class="ff-section-title">${GROUP_LABELS[k]}</div>
-          ${v.map(x => rowHtml(x.item, x.info)).join('')}
-        `).join('');
+      el.innerHTML = Object.entries(groups).filter(([, v]) => v.length).map(([k, v]) =>
+        `<tr class="ff-table-group-row"><td colspan="6">${GROUP_LABELS[k]}</td></tr>${v.map(x => tableRowHtml(x.item, x.info)).join('')}`).join('');
     } else {
-      el.innerHTML = rows.map(x => rowHtml(x.item, x.info)).join('');
+      el.innerHTML = rows.map(x => tableRowHtml(x.item, x.info)).join('');
     }
   }
 
-  // ---- Calendar ----
-  const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const STATUS_RANK = { overdue: 0, soon: 1, ok: 2, scheduled: 3, done: 4 };
-
+  // =====================================================================
+  // Página: Calendário
+  // =====================================================================
   function occurrenceForMonth(item, y, m) {
-    if (item.totalParcelas && item.parcelasPagas >= item.totalParcelas) return null;
-    const nextDue = getNextDue(item);
-    const isOneOff = item.tipo === 'renda_extra';
-    if (isOneOff) {
-      if (nextDue.getFullYear() === y && nextDue.getMonth() === m) return { date: nextDue, status: getStatus(item).status };
-      return null;
-    }
-    const day = Math.min(nextDue.getDate(), daysInMonth(y, m));
-    const cellDate = new Date(y, m, day);
-    if (nextDue.getFullYear() === y && nextDue.getMonth() === m) {
-      return { date: cellDate, status: getStatus(item).status };
-    }
-    if (cellDate < nextDue) {
-      const firstDue = new Date(item.primeiroVencimento + 'T00:00:00');
-      if (cellDate < firstDue) return null;
-      return { date: cellDate, status: 'done' };
-    }
+    const st = getStatus(item);
+    if (st.status === 'done') return null;
+    const d = st.due;
+    if (d.getFullYear() === y && d.getMonth() === m) return { date: d, status: st.status };
     return null;
   }
-
+  function calendarDayMap(y, m) {
+    const map = {};
+    items.forEach(item => {
+      const occ = occurrenceForMonth(item, y, m);
+      if (occ) (map[occ.date.getDate()] = map[occ.date.getDate()] || []).push({ item, status: occ.status });
+    });
+    const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+    payments.filter(p => (p.data || '').slice(0, 7) === key).forEach(p => {
+      const d = parseInt(p.data.slice(8, 10), 10);
+      (map[d] = map[d] || []).push({ payment: p, status: 'done' });
+    });
+    return map;
+  }
   function renderCalendar() {
-    document.getElementById('calMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
-    const grid = document.getElementById('calGrid');
+    $('calMonthLabel').textContent = `${MONTHS[calMonth]} ${calYear}`;
     let html = WEEKDAYS.map(w => `<div class="ff-cal-weekday">${w}</div>`).join('');
     const firstWeekday = new Date(calYear, calMonth, 1).getDay();
     const totalDays = daysInMonth(calYear, calMonth);
     const totalCells = Math.ceil((firstWeekday + totalDays) / 7) * 7;
     const prevMonthDays = daysInMonth(calYear, calMonth === 0 ? 11 : calMonth - 1);
     const today = new Date(); today.setHours(0, 0, 0, 0);
-
-    const occByDay = {};
-    items.forEach(item => {
-      const occ = occurrenceForMonth(item, calYear, calMonth);
-      if (occ) {
-        const d = occ.date.getDate();
-        (occByDay[d] = occByDay[d] || []).push({ item, status: occ.status });
-      }
-    });
-
+    const map = calendarDayMap(calYear, calMonth);
     for (let cell = 0; cell < totalCells; cell++) {
       const dayNum = cell - firstWeekday + 1;
-      if (dayNum < 1) {
-        html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${prevMonthDays + dayNum}</div></div>`;
-      } else if (dayNum > totalDays) {
-        html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${dayNum - totalDays}</div></div>`;
-      } else {
-        const cellDate = new Date(calYear, calMonth, dayNum);
-        const isToday = cellDate.getTime() === today.getTime();
-        const isSelected = selectedDay === dayNum;
-        const occ = occByDay[dayNum] || [];
+      if (dayNum < 1) html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${prevMonthDays + dayNum}</div></div>`;
+      else if (dayNum > totalDays) html += `<div class="ff-cal-cell outside"><div class="ff-cal-daynum">${dayNum - totalDays}</div></div>`;
+      else {
+        const isToday = new Date(calYear, calMonth, dayNum).getTime() === today.getTime();
+        const occ = map[dayNum] || [];
         let dot = '';
         if (occ.length) {
           const worst = occ.reduce((a, b) => (STATUS_RANK[b.status] < STATUS_RANK[a.status] ? b : a));
           dot = `<span class="ff-dot ${worst.status}"></span>`;
         }
-        html += `
-          <div class="ff-cal-cell ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" data-day="${dayNum}">
-            <div class="ff-cal-daynum">${dayNum}</div>${dot}
-          </div>`;
+        html += `<div class="ff-cal-cell ${isToday ? 'today' : ''} ${selectedDay === dayNum ? 'selected' : ''}" data-day="${dayNum}"><div class="ff-cal-daynum">${dayNum}</div>${dot}</div>`;
       }
     }
-    grid.innerHTML = html;
-    renderDayDetail(occByDay);
+    $('calGrid').innerHTML = html;
+    renderDayDetail(map);
   }
-
-  function renderDayDetail(occByDay) {
-    const panel = document.getElementById('dayDetail');
-    if (!selectedDay || !occByDay[selectedDay] || !occByDay[selectedDay].length) { panel.hidden = true; return; }
+  function renderDayDetail(map) {
+    const panel = $('dayDetail');
+    if (!selectedDay || !map[selectedDay] || !map[selectedDay].length) { panel.hidden = true; return; }
     panel.hidden = false;
-    const rows = occByDay[selectedDay].map(({ item, status }) => {
-      const nat = TIPOS[item.tipo].natureza;
-      const nextDue = getNextDue(item);
-      const info = { status, diffDays: Math.round((nextDue - new Date()) / 86400000) };
-      const isActionable = status !== 'done' && status !== 'scheduled';
-      return `
-        <div class="ff-row" data-id="${item.id}">
-          <span class="ff-dot ${status}"></span>
-          <div class="ff-row-body">
-            <div class="ff-row-name">${escapeHtml(item.nome)}</div>
-            <div class="ff-row-sub">${status === 'scheduled' ? 'Agendado' : dueText(nat, info)}</div>
-          </div>
-          <div class="ff-row-value ${nat}">${fmtMoney(item.valorParcela)}</div>
-          ${isActionable ? `<button class="ff-row-check" data-action="pay">✓</button>` : ''}
-        </div>`;
+    const rows = map[selectedDay].map(entry => {
+      if (entry.payment) {
+        const p = entry.payment;
+        return `<div class="ff-row" style="cursor:default"><span class="ff-dot done"></span><div class="ff-row-body"><div class="ff-row-name">${escapeHtml(p.nome)}</div><div class="ff-row-sub">${p.natureza === 'receita' ? 'Recebido' : 'Pago'} · ${escapeHtml(p.categoria || '')}</div></div><div class="ff-row-value ${p.natureza}">${fmtMoney(p.valor)}</div></div>`;
+      }
+      return rowHtml(entry.item, getStatus(entry.item));
     }).join('');
     panel.innerHTML = `<h4>${selectedDay} de ${MONTHS[calMonth]}</h4>${rows}`;
   }
 
-  // ---- Row interactions (click = edit, check = mark paid) ----
+  // =====================================================================
+  // Página: Gastos e limites
+  // =====================================================================
+  function renderBudget() {
+    $('budMonthLabel').textContent = `${MONTHS[budMonth]} ${budYear}`;
+    const ms = monthStats(budYear, budMonth);
+    const names = allCategories().filter(c => limitOf(c) > 0 || (ms.cats[c] && ms.cats[c].pago + ms.cats[c].previsto > 0));
+    const rows = names.map(c => [c, ms.cats[c] || { pago: 0, previsto: 0 }])
+      .sort((a, b) => (b[1].pago + b[1].previsto) - (a[1].pago + a[1].previsto));
+    $('budgetCats').innerHTML = rows.length
+      ? rows.map(([c, v]) => catRowHtml(c, v, false)).join('')
+      : '<div class="ff-empty-note">Nenhum gasto neste mês ainda.<br>Use “+ Gasto avulso” ou marque contas como pagas.</div>';
+
+    const list = ms.paidList.slice().sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+    $('budgetHistory').innerHTML = list.length
+      ? list.map(p => `
+        <tr>
+          <td>${fmtDateShort(parseISO(p.data))}</td>
+          <td class="ff-table-name">${escapeHtml(p.nome)}</td>
+          <td>${escapeHtml(p.natureza === 'receita' ? 'Receita' : (p.categoria || 'Outros'))}</td>
+          <td class="ff-table-value ${p.natureza}">${p.natureza === 'receita' ? '+' : ''}${fmtMoney(p.valor)}</td>
+          <td><button class="ff-trash" data-pid="${p.id}" title="Excluir do histórico">🗑</button></td>
+        </tr>`).join('')
+      : '<tr><td colspan="5"><div class="ff-empty-note">Sem registros neste mês.</div></td></tr>';
+  }
+
+  // ----- Limite -----
+  function openLimitModal(cat) {
+    $('limitError').textContent = '';
+    $('catList').innerHTML = allCategories().map(c => `<option value="${escapeHtml(c)}">`).join('');
+    $('lName').value = cat || '';
+    const lim = cat ? limitOf(cat) : 0;
+    $('lValor').value = lim > 0 ? lim : '';
+    $('limitRemove').hidden = !(lim > 0);
+    $('limitOverlay').hidden = false;
+  }
+  function closeLimitModal() { $('limitOverlay').hidden = true; }
+  function handleLimitSubmit(e) {
+    e.preventDefault();
+    const name = $('lName').value.trim();
+    const valor = parseFloat($('lValor').value);
+    if (!name) { $('limitError').textContent = 'Informe a categoria.'; return; }
+    addCustomCategory(name);
+    if (valor > 0) settings.limites[name] = valor; else delete settings.limites[name];
+    saveSettings(); closeLimitModal(); renderAll();
+  }
+  function handleLimitRemove() {
+    const name = $('lName').value.trim();
+    delete settings.limites[name];
+    saveSettings(); closeLimitModal(); renderAll();
+  }
+
+  // ----- Gasto avulso -----
+  function fillCategorySelect(sel, selected) {
+    const cats = allCategories();
+    if (selected && !cats.includes(selected)) cats.push(selected);
+    sel.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') + '<option value="__new__">＋ Nova categoria…</option>';
+    sel.value = selected && cats.includes(selected) ? selected : cats[0];
+    sel.dataset.last = sel.value;
+  }
+  function onCategoryChange(sel) {
+    if (sel.value !== '__new__') { sel.dataset.last = sel.value; return; }
+    const name = (prompt('Nome da nova categoria:') || '').trim();
+    if (name) { addCustomCategory(name); fillCategorySelect(sel, name); }
+    else fillCategorySelect(sel, sel.dataset.last);
+  }
+  function openExpenseModal() {
+    $('expenseError').textContent = '';
+    $('eNome').value = ''; $('eValor').value = '';
+    $('eData').value = isoDate(new Date());
+    fillCategorySelect($('eCategoria'), 'Alimentação');
+    $('expenseOverlay').hidden = false;
+  }
+  function closeExpenseModal() { $('expenseOverlay').hidden = true; }
+  function handleExpenseSubmit(e) {
+    e.preventDefault();
+    const nome = $('eNome').value.trim();
+    const valor = parseFloat($('eValor').value);
+    const data = $('eData').value;
+    const categoria = $('eCategoria').value === '__new__' ? 'Outros' : $('eCategoria').value;
+    if (!nome) { $('expenseError').textContent = 'Informe uma descrição.'; return; }
+    if (!(valor > 0)) { $('expenseError').textContent = 'Informe um valor válido.'; return; }
+    if (!data) { $('expenseError').textContent = 'Informe a data.'; return; }
+    payments.push({ id: uid(), itemId: null, nome, categoria, valor, data, pagoEm: isoDate(new Date()), natureza: 'despesa', tipo: 'gasto' });
+    savePayments(); closeExpenseModal(); renderAll();
+    warnIfLimitReached(categoria, data);
+  }
+  function warnIfLimitReached(cat, dateStr) {
+    const d = parseISO(dateStr);
+    const now = new Date();
+    if (d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth()) return;
+    const v = monthStats(now.getFullYear(), now.getMonth()).cats[cat];
+    if (!v) return;
+    const lim = limitOf(cat);
+    const ls = limitStatus(v.pago + v.previsto, lim);
+    if (!ls || ls.level === 'ok') return;
+    showToast(ls.level === 'over'
+      ? `🚨 ${cat}: limite estourado (${fmtMoney(v.pago + v.previsto)} de ${fmtMoney(lim)})`
+      : `⚠️ ${cat}: já usou ${Math.round(ls.pct)}% do limite`, { ms: 8000 });
+  }
+
+  // =====================================================================
+  // Marcar como pago (com desfazer)
+  // =====================================================================
+  function payItem(item) {
+    const nat = TIPOS[item.tipo].natureza;
+    const due = getNextDue(item);
+    const prev = { dataVencimento: item.dataVencimento, parcelasPagas: item.parcelasPagas };
+    const pay = {
+      id: uid(), itemId: item.id, nome: item.nome,
+      categoria: nat === 'despesa' ? catOf(item) : 'Receitas',
+      valor: Number(item.valorParcela) || 0, data: isoDate(due), pagoEm: isoDate(new Date()), natureza: nat, tipo: item.tipo
+    };
+    payments.push(pay);
+    if (item.totalParcelas) {
+      item.parcelasPagas = Math.min(item.totalParcelas, (item.parcelasPagas || 0) + 1);
+      if (item.parcelasPagas < item.totalParcelas) item.dataVencimento = advanceOneMonth(item.dataVencimento);
+    } else {
+      item.dataVencimento = advanceOneMonth(item.dataVencimento);
+    }
+    saveItemsAndPayments(); renderAll();
+    const finished = item.totalParcelas && item.parcelasPagas >= item.totalParcelas;
+    const msg = finished ? `${item.nome}: última parcela — quitado! 🎉`
+      : `${item.nome}: ${nat === 'receita' ? 'recebido' : 'pago'} · próximo em ${fmtDateShort(getNextDue(item))}`;
+    showToast(msg, { actionLabel: 'Desfazer', onAction: () => undoPay(item.id, prev, pay.id), ms: 7000 });
+  }
+  function undoPay(itemId, prev, payId) {
+    const item = items.find(i => i.id === itemId);
+    if (item) { item.dataVencimento = prev.dataVencimento; item.parcelasPagas = prev.parcelasPagas; }
+    payments = payments.filter(p => p.id !== payId);
+    saveItemsAndPayments(); renderAll();
+  }
   function handleRowClick(e) {
     const row = e.target.closest('.ff-row');
     if (!row) return;
-    const id = row.dataset.id;
-    const item = items.find(i => i.id === id);
-    const checkBtn = e.target.closest('button[data-action="pay"]');
-    if (checkBtn) {
-      if (item.totalParcelas) {
-        item.parcelasPagas = Math.min(item.totalParcelas, (item.parcelasPagas || 0) + 1);
-        if (item.parcelasPagas < item.totalParcelas) item.dataVencimento = advanceOneMonth(item.dataVencimento);
-      } else {
-        item.dataVencimento = advanceOneMonth(item.dataVencimento);
-      }
-      saveData(); renderAll();
-    } else {
-      openItemModal(item);
-    }
+    const item = items.find(i => i.id === row.dataset.id);
+    if (!item) return;
+    if (e.target.closest('button[data-action="pay"]')) payItem(item);
+    else openItemModal(item);
   }
 
-  // ---- Item form ----
+  // =====================================================================
+  // Formulário de lançamento
+  // =====================================================================
   function toggleFormFields() {
-    const tipo = document.getElementById('fTipo').value;
-    const natureza = TIPOS[tipo].natureza;
-    document.getElementById('fCategoriaWrap').style.display = tipo === 'conta' ? '' : 'none';
-    const showParcelas = tipo === 'financiamento' || tipo === 'emprestimo' || tipo === 'consorcio';
-    document.getElementById('fParcelasWrap').style.display = showParcelas ? '' : 'none';
-    document.getElementById('fContempladoWrap').style.display = tipo === 'consorcio' ? '' : 'none';
-    document.getElementById('fValorLabel').textContent = natureza === 'receita' ? 'Valor (R$)' : 'Valor da parcela (R$)';
-    document.getElementById('fDiaLabel').textContent = natureza === 'receita' ? 'Data do recebimento' : 'Data do vencimento';
+    const tipo = $('fTipo').value;
+    const nat = TIPOS[tipo].natureza;
+    $('fCategoriaWrap').hidden = nat !== 'despesa';
+    $('fParcelasWrap').hidden = !isParcelado(tipo);
+    $('fContempladoWrap').hidden = tipo !== 'consorcio';
+    $('fValorLabel').textContent = nat === 'receita' ? 'Valor (R$)' : 'Valor da parcela (R$)';
+    $('fDiaLabel').textContent = nat === 'receita' ? 'Data do recebimento' : 'Data do vencimento';
   }
   function toggleMoreDetails(show) {
-    document.getElementById('moreDetails').hidden = !show;
-    document.getElementById('toggleMore').textContent = show ? '- Menos detalhes' : '+ Mais detalhes';
+    $('moreDetails').hidden = !show;
+    $('toggleMore').textContent = show ? '- Menos detalhes' : '+ Mais detalhes';
   }
-  function openItemModal(item = null) {
+  function openItemModal(item) {
+    item = item || null;
     editingId = item ? item.id : null;
-    document.getElementById('formTitle').textContent = item ? 'Editar lançamento' : 'Novo lançamento';
-    document.getElementById('formError').textContent = '';
-    document.getElementById('formDelete').hidden = !item;
-    document.getElementById('formDuplicate').hidden = !item;
-    document.getElementById('fTipo').value = item ? item.tipo : 'conta';
-    document.getElementById('fNome').value = item ? item.nome : '';
-    document.getElementById('fCategoria').value = item ? (item.categoria || '') : '';
-    document.getElementById('fValor').value = item ? item.valorParcela : '';
-    document.getElementById('fDia').value = item ? item.dataVencimento : isoDate(new Date());
-    document.getElementById('fTotalParcelas').value = item && item.totalParcelas ? item.totalParcelas : '';
-    document.getElementById('fParcelasPagas').value = item ? (item.parcelasPagas || 0) : 0;
-    document.getElementById('fContemplado').checked = !!(item && item.contemplado);
-    document.getElementById('fObs').value = item ? (item.observacao || '') : '';
+    $('formTitle').textContent = item ? 'Editar lançamento' : 'Novo lançamento';
+    $('formError').textContent = '';
+    $('formDelete').hidden = !item;
+    $('formDuplicate').hidden = !item;
+    $('fTipo').value = item ? item.tipo : 'conta';
+    $('fNome').value = item ? item.nome : '';
+    fillCategorySelect($('fCategoria'), item ? catOf(item) : defaultCatForTipo($('fTipo').value));
+    $('fValor').value = item ? item.valorParcela : '';
+    $('fDia').value = item ? item.dataVencimento : isoDate(new Date());
+    $('fTotalParcelas').value = item && item.totalParcelas ? item.totalParcelas : '';
+    $('fParcelasPagas').value = item ? (item.parcelasPagas || 0) : 0;
+    $('fContemplado').checked = !!(item && item.contemplado);
+    $('fObs').value = item ? (item.observacao || '') : '';
     toggleFormFields();
-    toggleMoreDetails(!!(item && (item.categoria || item.observacao || item.totalParcelas > 1 || item.contemplado)));
-    document.getElementById('modalOverlay').hidden = false;
+    toggleMoreDetails(!!(item && (isParcelado(item.tipo) || item.observacao || item.contemplado)));
+    $('modalOverlay').hidden = false;
   }
-  function closeItemModal() { document.getElementById('modalOverlay').hidden = true; editingId = null; }
+  function closeItemModal() { $('modalOverlay').hidden = true; editingId = null; }
   function handleFormSubmit(e) {
     e.preventDefault();
-    const tipo = document.getElementById('fTipo').value;
-    const nome = document.getElementById('fNome').value.trim();
-    const valorParcela = parseFloat(document.getElementById('fValor').value);
-    const dataVencimento = document.getElementById('fDia').value;
-    const isParcelado = tipo === 'financiamento' || tipo === 'emprestimo' || tipo === 'consorcio';
-    let totalParcelas = isParcelado ? parseInt(document.getElementById('fTotalParcelas').value, 10) || null : null;
-    let parcelasPagas = isParcelado ? (parseInt(document.getElementById('fParcelasPagas').value, 10) || 0) : 0;
+    const tipo = $('fTipo').value;
+    const nat = TIPOS[tipo].natureza;
+    const nome = $('fNome').value.trim();
+    const valorParcela = parseFloat($('fValor').value);
+    const dataVencimento = $('fDia').value;
+    const parc = isParcelado(tipo);
+    let totalParcelas = parc ? (parseInt($('fTotalParcelas').value, 10) || null) : null;
+    let parcelasPagas = parc ? (parseInt($('fParcelasPagas').value, 10) || 0) : 0;
     if (tipo === 'renda_extra') { totalParcelas = 1; parcelasPagas = 0; }
-    const contemplado = document.getElementById('fContemplado').checked;
-    const observacao = document.getElementById('fObs').value.trim();
-    const categoria = document.getElementById('fCategoria').value.trim();
-    const errEl = document.getElementById('formError');
-    if (!nome) return errEl.textContent = 'Informe um nome.';
-    if (!(valorParcela > 0)) return errEl.textContent = 'Informe um valor válido.';
-    if (!dataVencimento) return errEl.textContent = 'Informe uma data.';
-    if (isParcelado) {
-      if (!(totalParcelas > 0)) return errEl.textContent = 'Informe o total de parcelas.';
-      if (parcelasPagas > totalParcelas) return errEl.textContent = 'Parcelas pagas não pode ser maior que o total.';
+    const contemplado = $('fContemplado').checked;
+    const observacao = $('fObs').value.trim();
+    let categoria = '';
+    if (nat === 'despesa') categoria = $('fCategoria').value === '__new__' ? defaultCatForTipo(tipo) : $('fCategoria').value;
+    const err = $('formError');
+    if (!nome) { err.textContent = 'Informe um nome.'; return; }
+    if (!(valorParcela > 0)) { err.textContent = 'Informe um valor válido.'; return; }
+    if (!dataVencimento) { err.textContent = 'Informe uma data.'; return; }
+    if (parc) {
+      if (!(totalParcelas > 0)) { err.textContent = 'Informe o total de parcelas (em “Mais detalhes”).'; toggleMoreDetails(true); return; }
+      if (parcelasPagas > totalParcelas) { err.textContent = 'Parcelas pagas não pode ser maior que o total.'; return; }
     }
     if (editingId) {
       const item = items.find(i => i.id === editingId);
@@ -825,72 +1272,54 @@
     } else {
       items.push({ id: uid(), tipo, nome, categoria, valorParcela, dataVencimento, primeiroVencimento: dataVencimento, totalParcelas, parcelasPagas, contemplado, observacao });
     }
-    saveData(); closeItemModal(); renderAll();
+    saveItems(); closeItemModal(); renderAll();
   }
   function handleFormDelete() {
     if (!editingId) return;
     const item = items.find(i => i.id === editingId);
     if (confirm(`Excluir "${item.nome}"?`)) {
       items = items.filter(i => i.id !== editingId);
-      saveData(); closeItemModal(); renderAll();
+      saveItems(); closeItemModal(); renderAll();
     }
   }
   function handleFormDuplicate() {
     if (!editingId) return;
     editingId = null;
-    document.getElementById('formTitle').textContent = 'Duplicar lançamento';
-    document.getElementById('formDelete').hidden = true;
-    document.getElementById('formDuplicate').hidden = true;
-    const nomeInput = document.getElementById('fNome');
-    nomeInput.value = nomeInput.value + ' (cópia)';
-    document.getElementById('fParcelasPagas').value = 0;
-    nomeInput.focus();
-    nomeInput.select();
+    $('formTitle').textContent = 'Duplicar lançamento';
+    $('formDelete').hidden = true;
+    $('formDuplicate').hidden = true;
+    $('fNome').value = $('fNome').value + ' (cópia)';
+    $('fParcelasPagas').value = 0;
+    $('fNome').focus(); $('fNome').select();
   }
 
-  // ---- Real login (Firebase Authentication — email + password) ----
+  // =====================================================================
+  // Login (Firebase Authentication) e conta
+  // =====================================================================
   let authMode = 'signin';
   let currentUserName = null;
   let currentFamilyName = null;
   let isAdmin = false;
+  const profileRef = uidArg => db.ref('users/' + uidArg + '/profile');
 
   function updateUserUI() {
-    const greeting = document.getElementById('userGreeting');
-    if (greeting) greeting.textContent = currentUserName ? `Olá, ${currentUserName}${currentFamilyName ? ' · ' + currentFamilyName : ''} 👋` : '';
-    const logoutLabel = document.getElementById('logoutRowLabel');
-    if (logoutLabel) logoutLabel.textContent = currentUserName ? `Você está como: ${currentUserName}` : 'Você está conectado';
-    document.getElementById('adminTabBtn').hidden = !isAdmin;
+    $('sbUserName').textContent = currentUserName || '—';
+    $('sbAvatar').textContent = currentUserName ? currentUserName.trim().charAt(0).toUpperCase() : '?';
+    $('sbFamily').textContent = currentFamilyName || '';
+    $('logoutRowLabel').textContent = currentUserName ? `Você está como: ${currentUserName}` : 'Você está conectado';
+    $('adminTabBtn').hidden = !isAdmin;
   }
-
   function setAuthMode(mode) {
     authMode = mode;
-    document.getElementById('authError').textContent = '';
-    document.getElementById('authError').style.color = '';
-    document.getElementById('authNameWrap').hidden = mode !== 'signup';
-    document.getElementById('authFamilyWrap').hidden = mode !== 'signup';
-    document.getElementById('authTitle').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
-    document.getElementById('authSub').textContent = mode === 'signup'
-      ? 'Crie o login da sua família. Você e seu cônjuge usam o mesmo e-mail e senha.'
-      : 'Entre com seu e-mail e senha.';
-    document.getElementById('authSubmit').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
-    document.getElementById('authToggle').textContent = mode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma';
-    document.getElementById('authForgot').hidden = mode === 'signup';
+    $('authError').textContent = ''; $('authError').style.color = '';
+    $('authNameWrap').hidden = mode !== 'signup';
+    $('authFamilyWrap').hidden = mode !== 'signup';
+    $('authTitle').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
+    $('authSub').textContent = mode === 'signup' ? 'Crie o login da sua família. Você e seu cônjuge usam o mesmo e-mail e senha.' : 'Entre com seu e-mail e senha.';
+    $('authSubmit').textContent = mode === 'signup' ? 'Criar conta' : 'Entrar';
+    $('authToggle').textContent = mode === 'signup' ? 'Já tem conta? Entrar' : 'Não tem conta? Criar uma';
+    $('authForgot').hidden = mode === 'signup';
   }
-
-  async function handleForgotPassword() {
-    const errEl = document.getElementById('authError');
-    const email = document.getElementById('authEmail').value.trim();
-    errEl.style.color = '';
-    if (!email) { errEl.textContent = 'Digite seu e-mail no campo acima primeiro.'; return; }
-    try {
-      await auth.sendPasswordResetEmail(email);
-      errEl.style.color = 'var(--primary)';
-      errEl.textContent = `Enviamos um link para redefinir a senha em ${email}. Confira sua caixa de entrada (e o spam).`;
-    } catch (e) {
-      errEl.textContent = translateAuthError(e.code);
-    }
-  }
-
   function translateAuthError(code) {
     const map = {
       'auth/email-already-in-use': 'Esse e-mail já tem uma conta. Tente entrar.',
@@ -904,98 +1333,71 @@
     };
     return map[code] || 'Não foi possível entrar. Tente de novo.';
   }
-
+  async function handleForgotPassword() {
+    const err = $('authError'); err.style.color = '';
+    const email = $('authEmail').value.trim();
+    if (!email) { err.textContent = 'Digite seu e-mail no campo acima primeiro.'; return; }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      err.style.color = 'var(--primary)';
+      err.textContent = `Enviamos um link para redefinir a senha em ${email}. Confira sua caixa de entrada (e o spam).`;
+    } catch (e) { err.textContent = translateAuthError(e.code); }
+  }
   async function handleAuthSubmit() {
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    const errEl = document.getElementById('authError');
-    errEl.textContent = '';
-    if (!email || !password) { errEl.textContent = 'Preencha e-mail e senha.'; return; }
+    const email = $('authEmail').value.trim();
+    const password = $('authPassword').value;
+    const err = $('authError'); err.textContent = '';
+    if (!email || !password) { err.textContent = 'Preencha e-mail e senha.'; return; }
     try {
       if (authMode === 'signup') {
-        const name = document.getElementById('authName').value.trim();
-        const familyName = document.getElementById('authFamily').value.trim();
-        if (!name) { errEl.textContent = 'Informe seu nome.'; return; }
-        if (!familyName) { errEl.textContent = 'Informe o nome da família.'; return; }
+        const name = $('authName').value.trim();
+        const familyName = $('authFamily').value.trim();
+        if (!name) { err.textContent = 'Informe seu nome.'; return; }
+        if (!familyName) { err.textContent = 'Informe o nome da família.'; return; }
         const cred = await auth.createUserWithEmailAndPassword(email, password);
         await cred.user.updateProfile({ displayName: name });
-        await profileRef(cred.user.uid).set({
-          name, familyName, email, createdAt: new Date().toISOString()
-        });
+        await profileRef(cred.user.uid).set({ name, familyName, email, createdAt: new Date().toISOString() });
       } else {
         await auth.signInWithEmailAndPassword(email, password);
       }
-      // onAuthStateChanged cuida do resto
-    } catch (e) {
-      errEl.textContent = translateAuthError(e.code);
-    }
+    } catch (e) { err.textContent = translateAuthError(e.code); }
   }
-
-  function handleLogout() {
-    if (confirm('Sair da sua conta?')) { auth.signOut(); }
-  }
+  function handleLogout() { if (confirm('Sair da sua conta?')) auth.signOut(); }
 
   function openChangePassword() {
-    document.getElementById('cpCurrent').value = '';
-    document.getElementById('cpNew').value = '';
-    document.getElementById('cpConfirm').value = '';
-    document.getElementById('cpError').textContent = '';
-    document.getElementById('changePasswordForm').hidden = false;
+    ['cpCurrent', 'cpNew', 'cpConfirm'].forEach(id => { $(id).value = ''; });
+    $('cpError').textContent = '';
+    $('changePasswordForm').hidden = false;
   }
-  function closeChangePassword() {
-    document.getElementById('changePasswordForm').hidden = true;
-  }
+  function closeChangePassword() { $('changePasswordForm').hidden = true; }
   async function handleChangePassword() {
-    const errEl = document.getElementById('cpError');
-    errEl.textContent = '';
-    const currentPassword = document.getElementById('cpCurrent').value;
-    const newPassword = document.getElementById('cpNew').value;
-    const confirmPassword = document.getElementById('cpConfirm').value;
-    if (!currentPassword || !newPassword) { errEl.textContent = 'Preencha todos os campos.'; return; }
-    if (newPassword.length < 6) { errEl.textContent = 'A nova senha precisa ter pelo menos 6 caracteres.'; return; }
-    if (newPassword !== confirmPassword) { errEl.textContent = 'As senhas novas não coincidem.'; return; }
+    const err = $('cpError'); err.textContent = '';
+    const cur = $('cpCurrent').value, nw = $('cpNew').value, conf = $('cpConfirm').value;
+    if (!cur || !nw) { err.textContent = 'Preencha todos os campos.'; return; }
+    if (nw.length < 6) { err.textContent = 'A nova senha precisa ter pelo menos 6 caracteres.'; return; }
+    if (nw !== conf) { err.textContent = 'As senhas novas não coincidem.'; return; }
     try {
       const user = auth.currentUser;
-      const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
-      await user.reauthenticateWithCredential(credential);
-      await user.updatePassword(newPassword);
+      await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, cur));
+      await user.updatePassword(nw);
       closeChangePassword();
       alert('Senha alterada com sucesso.');
     } catch (e) {
-      if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
-        errEl.textContent = 'Senha atual incorreta.';
-      } else if (e.code === 'auth/requires-recent-login') {
-        errEl.textContent = 'Por segurança, saia e entre de novo antes de trocar a senha.';
-      } else {
-        errEl.textContent = translateAuthError(e.code);
-      }
+      if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') err.textContent = 'Senha atual incorreta.';
+      else if (e.code === 'auth/requires-recent-login') err.textContent = 'Por segurança, saia e entre de novo antes de trocar a senha.';
+      else err.textContent = translateAuthError(e.code);
     }
   }
-
   async function checkDisabledAndAdmin(user) {
     let disabled = false;
     try {
-      const profSnap = await profileRef(user.uid).once('value');
-      const prof = profSnap.val();
-      if (prof) {
-        currentFamilyName = prof.familyName || null;
-        disabled = !!prof.disabled;
-      }
-    } catch (e) { /* regras podem bloquear leitura se desativado — tratado abaixo */ }
-
-    if (disabled) {
-      alert('Essa conta foi desativada pelo administrador.');
-      await auth.signOut();
-      return false;
-    }
-
-    try {
-      const adminSnap = await db.ref('admins/' + user.uid).once('value');
-      isAdmin = adminSnap.val() === true;
-    } catch (e) { isAdmin = false; }
+      const prof = (await profileRef(user.uid).once('value')).val();
+      if (prof) { currentFamilyName = prof.familyName || null; disabled = !!prof.disabled; }
+    } catch (e) { /* tratado abaixo */ }
+    if (disabled) { alert('Essa conta foi desativada pelo administrador.'); await auth.signOut(); return false; }
+    try { isAdmin = (await db.ref('admins/' + user.uid).once('value')).val() === true; } catch (e) { isAdmin = false; }
     return true;
   }
-
   function initAuth() {
     auth.onAuthStateChanged(async user => {
       if (user) {
@@ -1004,43 +1406,41 @@
         const ok = await checkDisabledAndAdmin(user);
         if (!ok) { currentUid = null; return; }
         updateUserUI();
-        document.getElementById('authOverlay').style.display = 'none';
+        $('authOverlay').style.display = 'none';
         startDataSync();
+        initPush();
         if (isAdmin) renderAdminList();
       } else {
         stopDataSync();
-        currentUid = null;
-        currentUserName = null;
-        currentFamilyName = null;
-        isAdmin = false;
+        currentUid = null; currentUserName = null; currentFamilyName = null; isAdmin = false;
         updateUserUI();
-        document.getElementById('authEmail').value = '';
-        document.getElementById('authPassword').value = '';
-        document.getElementById('authError').textContent = '';
+        $('authEmail').value = ''; $('authPassword').value = ''; $('authError').textContent = '';
         setAuthMode('signin');
-        document.getElementById('authOverlay').style.display = 'flex';
+        $('authOverlay').style.display = 'flex';
+        switchTab('overview');
       }
     });
   }
 
-  // ---- Admin panel ----
+  // =====================================================================
+  // Administração
+  // =====================================================================
   async function renderAdminList() {
-    const el = document.getElementById('adminList');
-    if (!el) return;
+    const el = $('adminList');
     try {
-      const snap = await db.ref('users').once('value');
-      const all = snap.val() || {};
+      const all = (await db.ref('users').once('value')).val() || {};
       const entries = Object.entries(all);
-      if (!entries.length) { el.innerHTML = `<div class="ff-empty-note">Nenhuma família cadastrada ainda.</div>`; return; }
+      if (!entries.length) { el.innerHTML = '<div class="ff-empty-note">Nenhuma família cadastrada ainda.</div>'; return; }
       el.innerHTML = entries.map(([theirUid, data]) => {
         const p = data.profile || {};
-        const itemCount = data.items ? (() => { try { return JSON.parse(data.items).length; } catch (e) { return 0; } })() : 0;
+        let count = 0; try { count = data.items ? JSON.parse(data.items).length : 0; } catch (e) { count = 0; }
+        const tokens = data.tokens ? Object.keys(data.tokens).length : 0;
         return `
           <div class="ff-admin-card ${p.disabled ? 'disabled' : ''}" data-uid="${theirUid}">
             <div class="ff-admin-top">
               <div>
                 <div class="ff-admin-name">${escapeHtml(p.familyName || '(sem nome)')} — ${escapeHtml(p.name || '')}</div>
-                <div class="ff-admin-email">${escapeHtml(p.email || '')} · ${itemCount} lançamento${itemCount === 1 ? '' : 's'}</div>
+                <div class="ff-admin-email">${escapeHtml(p.email || '')} · ${count} lançamento${count === 1 ? '' : 's'} · ${tokens} aparelho${tokens === 1 ? '' : 's'} com notificação</div>
               </div>
               ${p.disabled ? '<span class="ff-admin-badge">Desativada</span>' : ''}
             </div>
@@ -1050,94 +1450,227 @@
             </div>
           </div>`;
       }).join('');
-    } catch (e) {
-      el.innerHTML = `<div class="ff-empty-note">Não foi possível carregar a lista (confira as regras do banco).</div>`;
-    }
+    } catch (e) { el.innerHTML = '<div class="ff-empty-note">Não foi possível carregar a lista (confira as regras do banco).</div>'; }
   }
-
   function handleAdminListClick(e) {
     const card = e.target.closest('.ff-admin-card');
     if (!card) return;
     const theirUid = card.dataset.uid;
-    const action = e.target.closest('button')?.dataset.action;
+    const btn = e.target.closest('button');
+    const action = btn && btn.dataset.action;
     if (action === 'toggle-disable') {
       db.ref('users/' + theirUid + '/profile/disabled').once('value').then(snap => {
-        const current = !!snap.val();
-        db.ref('users/' + theirUid + '/profile/disabled').set(!current).then(renderAdminList);
+        db.ref('users/' + theirUid + '/profile/disabled').set(!snap.val()).then(renderAdminList);
       });
     } else if (action === 'wipe-data') {
-      if (confirm('Apagar todos os lançamentos financeiros dessa família? Essa ação não pode ser desfeita.')) {
-        db.ref('users/' + theirUid + '/items').remove().then(renderAdminList);
+      if (confirm('Apagar todos os lançamentos, histórico e limites dessa família? Essa ação não pode ser desfeita.')) {
+        Promise.all(['items', 'payments', 'settings'].map(k => db.ref('users/' + theirUid + '/' + k).remove())).then(renderAdminList);
       }
     }
   }
 
-  // ---- Orchestration ----
+  // =====================================================================
+  // Notificações no celular (FCM) e instalação do app
+  // =====================================================================
+  let swReg = null;
+  let deferredInstall = null;
+
+  async function registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    try { swReg = await navigator.serviceWorker.register('sw.js'); } catch (e) { console.warn('Service worker não registrado', e); }
+  }
+  async function pushSupported() {
+    try {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) return false;
+      return !!(await Promise.resolve(firebase.messaging.isSupported()));
+    } catch (e) { return false; }
+  }
+  function setPushStatus(text, enabled) {
+    $('pushStatus').textContent = text;
+    $('btnPush').textContent = enabled ? 'Reativar' : 'Ativar';
+    $('btnPushTest').hidden = !enabled;
+  }
+  async function saveToken(token) {
+    const key = token.replace(/[.#$\[\]\/]/g, '_');
+    await db.ref('users/' + currentUid + '/tokens/' + key).set({ token, device: (navigator.userAgent || '').slice(0, 90), at: new Date().toISOString(), by: currentUserName || '' });
+  }
+  async function getPushToken() {
+    const reg = swReg || await navigator.serviceWorker.ready;
+    return firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+  }
+  async function enablePush() {
+    if (!(await pushSupported())) {
+      setPushStatus('Este aparelho/navegador não permite notificações. No iPhone, primeiro instale o app (Compartilhar → Adicionar à Tela de Início) e abra por ele.', false);
+      return;
+    }
+    if (VAPID_KEY.indexOf('COLE_AQUI') === 0) {
+      setPushStatus('Falta colar a chave VAPID no index.html (passo 3 do README).', false);
+      return;
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { setPushStatus('Permissão negada. Libere as notificações nas configurações do navegador/aparelho.', false); return; }
+      const token = await getPushToken();
+      if (!token) { setPushStatus('Não consegui registrar este aparelho. Tente de novo.', false); return; }
+      await saveToken(token);
+      listenForeground();
+      setPushStatus('Ativadas neste aparelho ✓ Você recebe um resumo diário de manhã, quando houver algo importante.', true);
+    } catch (e) {
+      console.error(e);
+      setPushStatus('Erro ao ativar: ' + (e && e.message ? e.message : 'tente novamente.'), false);
+    }
+  }
+  let foregroundBound = false;
+  function listenForeground() {
+    if (foregroundBound) return;
+    try {
+      firebase.messaging().onMessage(p => { const d = (p && p.data) || {}; showToast(`${d.title || 'Aviso'}: ${(d.body || '').split('\n')[0]}`, { ms: 9000 }); });
+      foregroundBound = true;
+    } catch (e) { /* ignorar */ }
+  }
+  async function initPush() {
+    // renova o registro silenciosamente se a permissão já foi dada antes
+    try {
+      if (!(await pushSupported())) { setPushStatus('Receba avisos de contas perto de vencer e de limites quase estourados.', false); return; }
+      if (Notification.permission === 'granted' && VAPID_KEY.indexOf('COLE_AQUI') !== 0) {
+        const token = await getPushToken();
+        if (token) { await saveToken(token); listenForeground(); setPushStatus('Ativadas neste aparelho ✓', true); return; }
+      }
+      setPushStatus('Receba avisos de contas perto de vencer e de limites quase estourados.', false);
+    } catch (e) { console.warn('initPush', e); }
+  }
+  async function testPush() {
+    try {
+      const reg = swReg || await navigator.serviceWorker.ready;
+      await reg.showNotification('Nossas finanças', { body: 'Teste: as notificações estão funcionando neste aparelho. ✅', icon: 'icon-192.png', tag: 'teste' });
+    } catch (e) { showToast('Não consegui mostrar a notificação de teste.'); }
+  }
+
+  // =====================================================================
+  // Navegação e orquestração
+  // =====================================================================
+  function closeMenu() { document.body.classList.remove('menu-open'); }
   function switchTab(tab) {
+    if (tab === 'admin' && !isAdmin) tab = 'overview';
     activeTab = tab;
-    document.querySelectorAll('.ff-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-    document.getElementById('panelOverview').hidden = tab !== 'overview';
-    document.getElementById('panelCalendar').hidden = tab !== 'calendar';
-    document.getElementById('panelList').hidden = tab !== 'list';
-    document.getElementById('panelAdmin').hidden = tab !== 'admin';
+    document.querySelectorAll('.sb-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    Object.entries(PANELS).forEach(([k, id]) => { $(id).hidden = k !== tab; });
+    $('pageTitle').textContent = PAGE_TITLES[tab];
+    closeMenu();
     renderAll();
+    window.scrollTo(0, 0);
   }
   function renderAll() {
     if (activeTab === 'overview') renderOverview();
-    else if (activeTab === 'calendar') renderCalendar();
     else if (activeTab === 'list') renderList();
+    else if (activeTab === 'calendar') renderCalendar();
+    else if (activeTab === 'budget') renderBudget();
     else if (activeTab === 'admin') renderAdminList();
   }
+  function shiftMonth(kind, delta) {
+    if (kind === 'cal') { calMonth += delta; if (calMonth < 0) { calMonth = 11; calYear -= 1; } if (calMonth > 11) { calMonth = 0; calYear += 1; } selectedDay = null; renderCalendar(); }
+    else { budMonth += delta; if (budMonth < 0) { budMonth = 11; budYear -= 1; } if (budMonth > 11) { budMonth = 0; budYear += 1; } renderBudget(); }
+  }
+  function loadSettingsInputs() { $('sAlertDias').value = settings.alertaDias; $('sAlertPct').value = settings.alertaPct; }
 
   function init() {
-    document.getElementById('btnAdd').addEventListener('click', () => openItemModal());
-    document.getElementById('formCancel').addEventListener('click', closeItemModal);
-    document.getElementById('formDelete').addEventListener('click', handleFormDelete);
-    document.getElementById('formDuplicate').addEventListener('click', handleFormDuplicate);
-    document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeItemModal(); });
-    document.getElementById('itemForm').addEventListener('submit', handleFormSubmit);
-    document.getElementById('fTipo').addEventListener('change', toggleFormFields);
-    document.getElementById('toggleMore').addEventListener('click', () => toggleMoreDetails(document.getElementById('moreDetails').hidden));
+    const now = new Date();
+    calYear = budYear = now.getFullYear();
+    calMonth = budMonth = now.getMonth();
 
-    document.querySelectorAll('.ff-tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    // menu lateral
+    document.querySelectorAll('.sb-item[data-tab]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+    $('btnMenu').addEventListener('click', () => document.body.classList.toggle('menu-open'));
+    $('sbBackdrop').addEventListener('click', closeMenu);
+    $('btnLogoutSide').addEventListener('click', handleLogout);
+    $('btnAdd').addEventListener('click', () => openItemModal());
 
-    document.getElementById('panelOverview').addEventListener('click', handleRowClick);
-    document.getElementById('listContent').addEventListener('click', handleRowClick);
-    document.getElementById('dayDetail').addEventListener('click', handleRowClick);
+    // lançamento
+    $('formCancel').addEventListener('click', closeItemModal);
+    $('formDelete').addEventListener('click', handleFormDelete);
+    $('formDuplicate').addEventListener('click', handleFormDuplicate);
+    $('modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeItemModal(); });
+    $('itemForm').addEventListener('submit', handleFormSubmit);
+    $('fTipo').addEventListener('change', () => { toggleFormFields(); if (!editingId) fillCategorySelect($('fCategoria'), defaultCatForTipo($('fTipo').value)); });
+    $('fCategoria').addEventListener('change', e => onCategoryChange(e.target));
+    $('toggleMore').addEventListener('click', () => toggleMoreDetails($('moreDetails').hidden));
 
-    document.getElementById('listFilter').addEventListener('change', e => { activeListFilter = e.target.value; renderList(); });
-    document.getElementById('listSort').addEventListener('change', e => { activeListSort = e.target.value; renderList(); });
-    document.getElementById('showDone').addEventListener('change', e => { showDone = e.target.checked; renderList(); });
+    // listas
+    $('panelOverview').addEventListener('click', e => {
+      const g = e.target.closest('[data-goto]');
+      if (g && !e.target.closest('button[data-action="pay"]')) { switchTab(g.dataset.goto); return; }
+      handleRowClick(e);
+    });
+    $('listContent').addEventListener('click', handleRowClick);
+    $('dayDetail').addEventListener('click', handleRowClick);
+    $('listFilter').addEventListener('change', e => { activeListFilter = e.target.value; renderList(); });
+    $('listSort').addEventListener('change', e => { activeListSort = e.target.value; renderList(); });
+    $('showDone').addEventListener('change', e => { showDone = e.target.checked; renderList(); });
 
-    document.getElementById('calPrev').addEventListener('click', () => { calMonth -= 1; if (calMonth < 0) { calMonth = 11; calYear -= 1; } selectedDay = null; renderCalendar(); });
-    document.getElementById('calNext').addEventListener('click', () => { calMonth += 1; if (calMonth > 11) { calMonth = 0; calYear += 1; } selectedDay = null; renderCalendar(); });
-    document.getElementById('calGrid').addEventListener('click', e => {
+    // calendário
+    $('calPrev').addEventListener('click', () => shiftMonth('cal', -1));
+    $('calNext').addEventListener('click', () => shiftMonth('cal', 1));
+    $('calGrid').addEventListener('click', e => {
       const cell = e.target.closest('.ff-cal-cell:not(.outside)');
       if (!cell) return;
       selectedDay = selectedDay === Number(cell.dataset.day) ? null : Number(cell.dataset.day);
       renderCalendar();
     });
 
-    document.getElementById('btnSettings').addEventListener('click', () => document.getElementById('settingsOverlay').hidden = false);
-    document.getElementById('settingsClose').addEventListener('click', () => document.getElementById('settingsOverlay').hidden = true);
-    document.getElementById('settingsOverlay').addEventListener('click', e => { if (e.target.id === 'settingsOverlay') document.getElementById('settingsOverlay').hidden = true; });
-    document.getElementById('btnExport').addEventListener('click', exportData);
-    document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
-    document.getElementById('importFile').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
-    document.getElementById('btnLogout').addEventListener('click', handleLogout);
-    document.getElementById('btnChangePassword').addEventListener('click', openChangePassword);
-    document.getElementById('cpCancel').addEventListener('click', closeChangePassword);
-    document.getElementById('cpSubmit').addEventListener('click', handleChangePassword);
-
-    document.getElementById('authSubmit').addEventListener('click', handleAuthSubmit);
-    document.getElementById('authToggle').addEventListener('click', () => setAuthMode(authMode === 'signup' ? 'signin' : 'signup'));
-    document.getElementById('authForgot').addEventListener('click', handleForgotPassword);
-    ['authEmail', 'authPassword', 'authName', 'authFamily'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); } });
+    // gastos e limites
+    $('budPrev').addEventListener('click', () => shiftMonth('bud', -1));
+    $('budNext').addEventListener('click', () => shiftMonth('bud', 1));
+    $('btnNewExpense').addEventListener('click', openExpenseModal);
+    $('btnNewLimit').addEventListener('click', () => openLimitModal(null));
+    $('budgetCats').addEventListener('click', e => { const r = e.target.closest('.bd-row'); if (r && r.dataset.cat) openLimitModal(r.dataset.cat); });
+    $('budgetHistory').addEventListener('click', e => {
+      const b = e.target.closest('button[data-pid]');
+      if (!b) return;
+      if (confirm('Excluir este registro do histórico?\n(Isso não desfaz o pagamento no lançamento original.)')) {
+        payments = payments.filter(p => p.id !== b.dataset.pid);
+        savePayments(); renderAll();
+      }
     });
-    document.getElementById('adminList').addEventListener('click', handleAdminListClick);
+    $('expenseForm').addEventListener('submit', handleExpenseSubmit);
+    $('expenseCancel').addEventListener('click', closeExpenseModal);
+    $('eCategoria').addEventListener('change', e => onCategoryChange(e.target));
+    $('expenseOverlay').addEventListener('click', e => { if (e.target.id === 'expenseOverlay') closeExpenseModal(); });
+    $('limitForm').addEventListener('submit', handleLimitSubmit);
+    $('limitCancel').addEventListener('click', closeLimitModal);
+    $('limitRemove').addEventListener('click', handleLimitRemove);
+    $('limitOverlay').addEventListener('click', e => { if (e.target.id === 'limitOverlay') closeLimitModal(); });
+
+    // configurações
+    $('btnSettings').addEventListener('click', () => { loadSettingsInputs(); closeMenu(); $('settingsOverlay').hidden = false; });
+    $('settingsClose').addEventListener('click', () => { $('settingsOverlay').hidden = true; });
+    $('settingsOverlay').addEventListener('click', e => { if (e.target.id === 'settingsOverlay') $('settingsOverlay').hidden = true; });
+    $('btnExport').addEventListener('click', exportData);
+    $('btnImport').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value = ''; });
+    $('btnLogout').addEventListener('click', handleLogout);
+    $('btnChangePassword').addEventListener('click', openChangePassword);
+    $('cpCancel').addEventListener('click', closeChangePassword);
+    $('cpSubmit').addEventListener('click', handleChangePassword);
+    $('btnPush').addEventListener('click', enablePush);
+    $('btnPushTest').addEventListener('click', testPush);
+    $('sAlertDias').addEventListener('change', e => { const v = parseInt(e.target.value, 10); settings.alertaDias = isNaN(v) ? 3 : Math.max(0, Math.min(30, v)); saveSettings(); renderAll(); });
+    $('sAlertPct').addEventListener('change', e => { const v = parseInt(e.target.value, 10); settings.alertaPct = isNaN(v) ? 80 : Math.max(1, Math.min(100, v)); saveSettings(); renderAll(); });
+
+    // instalar como app
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; $('btnInstall').hidden = false; });
+    $('btnInstall').addEventListener('click', async () => { if (!deferredInstall) return; deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; $('btnInstall').hidden = true; });
+
+    // login
+    $('authSubmit').addEventListener('click', handleAuthSubmit);
+    $('authToggle').addEventListener('click', () => setAuthMode(authMode === 'signup' ? 'signin' : 'signup'));
+    $('authForgot').addEventListener('click', handleForgotPassword);
+    ['authEmail', 'authPassword', 'authName', 'authFamily'].forEach(id => {
+      $(id).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); } });
+    });
+    $('adminList').addEventListener('click', handleAdminListClick);
 
     toggleFormFields();
+    registerSW();
     initAuth();
   }
 

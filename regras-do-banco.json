@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "admins": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "users": {
+      ".read": "root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        "profile": {
+          ".read": "$uid === auth.uid || root.child('admins').child(auth.uid).exists()",
+          "name": { ".write": "$uid === auth.uid || root.child('admins').child(auth.uid).exists()" },
+          "familyName": { ".write": "$uid === auth.uid || root.child('admins').child(auth.uid).exists()" },
+          "email": { ".write": "$uid === auth.uid || root.child('admins').child(auth.uid).exists()" },
+          "createdAt": { ".write": "$uid === auth.uid || root.child('admins').child(auth.uid).exists()" },
+          "disabled": { ".write": "root.child('admins').child(auth.uid).exists()" }
+        },
+        "items": {
+          ".read": "($uid === auth.uid && root.child('users').child($uid).child('profile').child('disabled').val() !== true) || root.child('admins').child(auth.uid).exists()",
+          ".write": "($uid === auth.uid && root.child('users').child($uid).child('profile').child('disabled').val() !== true) || root.child('admins').child(auth.uid).exists()"
+        },
+        "payments": {
+          ".read": "($uid === auth.uid && root.child('users').child($uid).child('profile').child('disabled').val() !== true) || root.child('admins').child(auth.uid).exists()",
+          ".write": "($uid === auth.uid && root.child('users').child($uid).child('profile').child('disabled').val() !== true) || root.child('admins').child(auth.uid).exists()"
+        },
+        "settings": {
+          ".read": "($uid === auth.uid && root.child('users').child($uid).child('profile').child('disabled').val() !== true) || root.child('admins').child(auth.uid).exists()",
+          ".write": "($uid === auth.uid && root.child('users').child($uid).child('profile').child('disabled').val() !== true) || root.child('admins').child(auth.uid).exists()"
+        },
+        "tokens": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    }
+  }
+}
