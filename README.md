@@ -43,10 +43,13 @@ O envio automático acontece todo dia às 08:00 (Brasília).
 
 
 ## Cartão de crédito
-1. Aba **Cartões → + Novo cartão**: informe o dia de **fechamento** e o de **vencimento** (aparecem na fatura do banco).
-2. **+ Compra no cartão**: cada compra entra na fatura certa e **conta no limite do mês da compra**.
-3. A **fatura** aparece sozinha em Lançamentos, Calendário e nos alertas, e é paga com o ✓. Só a fatura mexe no saldo/caixa; ela **não** conta de novo nos limites.
-4. Se você já lançou a fatura como uma conta comum (ex.: 10/10), troque a categoria dela para **“Cartão de crédito”** (fica fora dos limites) ou apague e use as compras.
+1. Aba **Cartões → + Novo cartão**: dia de **vencimento**, dia de **fechamento** (ou marque **“Fecha no último dia do mês”** para jogar todas as compras do mês na fatura do mês seguinte) e, se quiser, um **limite de gastos por mês**.
+2. **+ Compra no cartão**: escolha o cartão; a compra entra na fatura certa e **debita o limite do mês em que foi feita**.
+   - **Compra parcelada**: escolha o número de parcelas (2x a 24x) e se o valor digitado é o total ou o de cada parcela. Cada parcela vira um lançamento (ex.: “TV (2/3)”) na fatura do seu mês e conta no limite daquele mês. Ao excluir uma parcela, o app pergunta se quer apagar todas.
+3. **+ Fatura (informar total)**: lance só o total que veio no banco (ex.: R$ 1.500), com o **vencimento que você escolher**. Ela entra no caixa/calendário na data do vencimento, mas o **gasto conta no limite do mês em que a fatura foi gerada** (mês do meio do período), não no mês em que vence.
+4. Em cada fatura há **Editar vencimento / total** e **Marcar como paga**. Só o pagamento mexe no saldo.
+5. Fatura que você já tinha lançado como conta comum? Abra o lançamento e use **“Converter em fatura do cartão”**.
+6. Em **Gastos e limites** aparece uma linha 💳 por cartão (gasto do mês × limite) e os alertas (Início e celular) avisam quando chega perto.
 
 ## Observações
 - Só chega notificação se houver algo importante no dia (conta perto de vencer/atrasada ou limite ≥ % escolhido nas Configurações).

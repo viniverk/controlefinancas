@@ -28,46 +28,83 @@ function catOf(i) {
 }
 function dim(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); } // m = 1..12
 
+const clamp = n => Math.max(1, Math.min(31, Number(n) || 1));
+const isoOf = (y, m, d) => `${y}-${pad(m)}-${pad(d)}`;   // m = 1..12
+
 /* Em qual fatura cai uma compra? (mesma regra do app) */
-function invoiceFor(card, iso) {
+function invoiceKeyFor(card, iso) {
   const [y, m, d] = iso.split('-').map(Number);
-  const fech = Math.max(1, Math.min(31, Number(card.fechamento) || 1));
-  const venc = Math.max(1, Math.min(31, Number(card.vencimento) || 1));
+  const fech = clamp(card.fechamento), venc = clamp(card.vencimento);
   let cy = y, cm = m;
   if (d > Math.min(fech, dim(cy, cm))) { cm++; if (cm > 12) { cm = 1; cy++; } }
   let dy = cy, dm = cm;
   if (venc <= fech) { dm++; if (dm > 12) { dm = 1; dy++; } }
-  return { key: `${dy}-${pad(dm)}`, due: `${dy}-${pad(dm)}-${pad(Math.min(venc, dim(dy, dm)))}` };
+  return `${dy}-${pad(dm)}`;
 }
-function pendingInvoices(settings, payments) {
+/* Período e vencimento padrão da fatura 'AAAA-MM' (mês do vencimento) */
+function invoicePeriod(card, key) {
+  const [dy, dm] = key.split('-').map(Number);
+  const fech = clamp(card.fechamento), venc = clamp(card.vencimento);
+  let cy = dy, cm = dm;
+  if (venc <= fech) { cm--; if (cm < 1) { cm = 12; cy--; } }
+  const closingDay = toDay(isoOf(cy, cm, Math.min(fech, dim(cy, cm))));
+  let py = cy, pm = cm - 1; if (pm < 1) { pm = 12; py--; }
+  const startDay = toDay(isoOf(py, pm, Math.min(fech, dim(py, pm)))) + 1;
+  return { startDay, closingDay, due: isoOf(dy, dm, Math.min(venc, dim(dy, dm))) };
+}
+function monthKeyOfDay(day) { return new Date(Math.floor(day) * 86400000).toISOString().slice(0, 7); }
+
+/* Faturas dos cartões: compras agrupadas + total/vencimento informados à mão */
+function invoices(settings, payments) {
   const cards = settings.cartoes || [];
   const map = {};
+  const get = (card, key) => {
+    const k = card.id + '|' + key;
+    if (!map[k]) {
+      const per = invoicePeriod(card, key);
+      map[k] = { card, key, due: per.due, per, detalhado: 0, informado: null, paid: 0 };
+    }
+    return map[k];
+  };
   payments.forEach(p => {
     if (p.tipo !== 'cartao' || !p.data) return;
     const card = cards.find(c => c.id === p.cartaoId);
     if (!card) return;
-    const inf = invoiceFor(card, p.data);
-    const k = card.id + '|' + inf.key;
-    const inv = map[k] || (map[k] = { card, key: inf.key, due: inf.due, total: 0, paid: 0 });
-    inv.total += Number(p.valor) || 0;
+    get(card, invoiceKeyFor(card, p.data)).detalhado += Number(p.valor) || 0;
+  });
+  Object.entries(settings.faturas || {}).forEach(([k, f]) => {
+    const [cid, key] = k.split('|');
+    const card = cards.find(c => c.id === cid);
+    if (!card || !f) return;
+    const inv = get(card, key);
+    if (f.total != null && f.total !== '' && !isNaN(Number(f.total))) inv.informado = Number(f.total);
+    if (f.due) inv.due = f.due;
   });
   payments.forEach(p => {
     if (p.tipo !== 'fatura') return;
     const inv = map[p.cartaoId + '|' + p.faturaKey];
     if (inv) inv.paid += Number(p.valor) || 0;
   });
-  return Object.values(map)
-    .map(inv => Object.assign(inv, { remaining: Math.max(0, Math.round((inv.total - inv.paid) * 100) / 100) }))
-    .filter(inv => inv.remaining >= 0.005 && inv.total > 0);
+  return Object.values(map).map(inv => {
+    inv.detalhado = Math.round(inv.detalhado * 100) / 100;
+    inv.total = inv.informado != null ? inv.informado : inv.detalhado;
+    inv.semDetalhe = Math.max(0, Math.round((inv.total - inv.detalhado) * 100) / 100);
+    inv.remaining = Math.max(0, Math.round((inv.total - inv.paid) * 100) / 100);
+    // gasto sem detalhar pertence ao mês do meio do período da fatura (não ao mês do vencimento)
+    inv.attrKey = monthKeyOfDay((inv.per.startDay + inv.per.closingDay) / 2);
+    return inv;
+  });
 }
 
 /* Mesma regra da tela "Gastos e limites":
    - gasto do mês por categoria = pagamentos e compras no cartão do MÊS DA COMPRA + contas ainda a pagar neste mês
-   - a fatura do cartão NÃO entra no limite (só nos vencimentos) */
+   - a fatura do cartão NÃO entra no limite das categorias (só nos vencimentos)
+   - limite do cartão = compras do mês + total de faturas sem detalhar geradas neste mês */
 function buildAlerts({ items, payments, settings, today }) {
   const dias = Number.isFinite(Number(settings.alertaDias)) ? Number(settings.alertaDias) : 3;
   const pct = Number(settings.alertaPct) || 80;
   const lines = [];
+  const invs = invoices(settings, payments);
 
   // 1) vencimentos: contas e faturas de cartão
   const due = [];
@@ -76,7 +113,7 @@ function buildAlerts({ items, payments, settings, today }) {
     const d = diffDays(i.dataVencimento, today);
     if (d <= dias) due.push({ nome: i.nome, valor: i.valorParcela, venc: i.dataVencimento, d, icone: '🔔' });
   });
-  pendingInvoices(settings, payments).forEach(inv => {
+  invs.filter(inv => inv.remaining >= 0.005 && inv.total > 0).forEach(inv => {
     const d = diffDays(inv.due, today);
     if (d <= dias) due.push({ nome: `Fatura ${inv.card.nome}`, valor: inv.remaining, venc: inv.due, d, icone: '💳' });
   });
@@ -110,6 +147,18 @@ function buildAlerts({ items, payments, settings, today }) {
     const p = total / lim * 100;
     if (p >= 100) lines.push(`🚨 ${c}: limite estourado (${BRL(total)} de ${BRL(lim)})`);
     else if (p >= pct) lines.push(`⚠️ ${c}: ${Math.round(p)}% do limite (${BRL(total)} de ${BRL(lim)})`);
+  });
+
+  // 3) limite de gastos de cada cartão no mês atual
+  (settings.cartoes || []).forEach(card => {
+    const lim = Number(card.limite) || 0;
+    if (!(lim > 0)) return;
+    let total = 0;
+    payments.forEach(p => { if (p.tipo === 'cartao' && p.cartaoId === card.id && (p.data || '').slice(0, 7) === key) total += Number(p.valor) || 0; });
+    invs.forEach(inv => { if (inv.card.id === card.id && inv.semDetalhe > 0 && inv.attrKey === key) total += inv.semDetalhe; });
+    const p = total / lim * 100;
+    if (p >= 100) lines.push(`🚨 Cartão ${card.nome}: limite do mês estourado (${BRL(total)} de ${BRL(lim)})`);
+    else if (p >= pct) lines.push(`⚠️ Cartão ${card.nome}: ${Math.round(p)}% do limite do mês (${BRL(total)} de ${BRL(lim)})`);
   });
 
   return { lines };
