@@ -207,7 +207,7 @@
   .ff-table.fixed tbody td { padding: 13px 10px; vertical-align: middle; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
   .ff-table.fixed td.ff-table-name { font-weight: 600; }
   .ff-table.fixed td.ff-table-value, .ff-table.fixed td.ff-nowrap { white-space: nowrap; }
-  .ff-table.fixed td.ff-act { text-align: center; padding-left: 4px; padding-right: 4px; }
+  .ff-table.fixed td.ff-act { white-space: nowrap; text-align: center; padding-left: 4px; padding-right: 4px; }
   .ff-table-status .ff-dot { margin-right: 8px; vertical-align: middle; }
   .ff-table th.num, .ff-table td.num, .ff-table td.ff-table-value { text-align: right; }
   .ff-table-group-row.rec td { color: var(--receita); }
@@ -350,7 +350,7 @@
       <div id="listTotal"></div>
       <div class="ff-table-wrap">
         <table class="ff-table fixed">
-          <colgroup><col style="width:31%"><col style="width:20%"><col style="width:15%"><col style="width:12%"><col style="width:16%"><col style="width:6%"></colgroup>
+          <colgroup><col style="width:29%"><col style="width:19%"><col style="width:15%"><col style="width:12%"><col style="width:15%"><col style="width:10%"></colgroup>
           <thead>
             <tr><th>Descrição</th><th>Categoria</th><th class="num">Valor</th><th>Data</th><th>Status</th><th></th></tr>
           </thead>
@@ -529,6 +529,46 @@
       <span></span>
       <div style="display:flex; gap:10px;">
         <button type="button" class="ff-btn ff-btn-ghost" id="expenseCancel">Cancelar</button>
+        <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Editar lançamento feito ===== -->
+<div class="ff-overlay" id="payEditOverlay" hidden>
+  <form class="ff-modal" id="payEditForm">
+    <h2 id="peTitle">Editar lançamento</h2>
+    <div class="ff-field" id="peCartaoWrap">
+      <label>Cartão</label>
+      <select id="peCartao"></select>
+    </div>
+    <div class="ff-field">
+      <label>Descrição</label>
+      <input id="peNome" type="text" required>
+    </div>
+    <div class="ff-field-row">
+      <div class="ff-field" id="peCatWrap">
+        <label>Categoria</label>
+        <select id="peCategoria"></select>
+      </div>
+      <div class="ff-field">
+        <label>Valor (R$)</label>
+        <input id="peValor" type="number" min="0" step="0.01" required>
+      </div>
+    </div>
+    <div class="ff-field">
+      <label id="peDataLabel">Data</label>
+      <input id="peData" type="date" required>
+    </div>
+    <div class="ff-field" id="peGrupoWrap" hidden>
+      <label class="ff-check"><input type="checkbox" id="peGrupo" checked> <span id="peGrupoTxt">Aplicar a todas as parcelas</span></label>
+    </div>
+    <div class="ff-error" id="peError"></div>
+    <div class="ff-modal-actions">
+      <span></span>
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="ff-btn ff-btn-ghost" id="peCancel">Cancelar</button>
         <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
       </div>
     </div>
@@ -1394,7 +1434,8 @@
     let status, action;
     if (e.kind === 'payment') {
       status = `<span class="ff-dot done"></span>${rec ? 'Recebido' : 'Pago'}`;
-      action = `<button class="ff-trash" data-pid="${e.pid}" title="Excluir do histórico">🗑</button>`;
+      const pp = payments.find(x => x.id === e.pid);
+      action = `${canEditPayment(pp) ? editBtn(e.pid) : ''}<button class="ff-trash" data-pid="${e.pid}" title="Excluir do histórico">🗑</button>`;
     } else {
       status = `<span class="ff-dot ${e.status}"></span>${dueText(e.natureza, e)}`;
       action = `<button class="ff-row-check" data-action="${e.kind === 'invoice' ? 'payinv' : 'pay'}" title="Marcar como ${rec ? 'recebido' : 'pago'}">✓</button>`;
@@ -1563,7 +1604,7 @@
           <td class="ff-table-name" title="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}${p.tipo === 'cartao' ? ' <span title="Compra no cartão">💳</span>' : ''}</td>
           <td>${escapeHtml(p.categoria || 'Outros')}</td>
           <td class="ff-table-value neg">− ${fmtMoney(p.valor)}</td>
-          <td><button class="ff-trash" data-pid="${p.id}" title="Excluir do histórico">🗑</button></td>
+          <td class="ff-nowrap">${canEditPayment(p) ? editBtn(p.id) : ''}<button class="ff-trash" data-pid="${p.id}" title="Excluir do histórico">🗑</button></td>
         </tr>`).join('')
       : '<tr><td colspan="5"><div class="ff-empty-note">Sem registros neste mês.</div></td></tr>';
   }
@@ -1688,7 +1729,7 @@
               <td class="ff-table-name">${escapeHtml(p.nome)}</td>
               <td>${escapeHtml(p.categoria || 'Outros')}</td>
               <td class="ff-table-value neg">− ${fmtMoney(p.valor)}</td>
-              <td><button class="ff-trash" data-pid="${p.id}" title="Excluir compra">🗑</button></td>
+              <td class="ff-nowrap">${editBtn(p.id)}<button class="ff-trash" data-pid="${p.id}" title="Excluir compra">🗑</button></td>
             </tr>`).join('')}</tbody>
         </table>
       </div>`;
@@ -1971,6 +2012,64 @@
     if (item) { item.dataVencimento = prev.dataVencimento; item.parcelasPagas = prev.parcelasPagas; }
     payments = payments.filter(p => p.id !== payId);
     saveItemsAndPayments(); renderAll();
+  }
+  // ----- Editar lançamento já feito (compra no cartão, gasto avulso, pagamento) -----
+  let editingPid = null;
+  const editBtn = pid => `<button class="ff-trash ff-edit" data-edpid="${pid}" title="Editar">✏️</button>`;
+  function canEditPayment(p) { return !!p && p.tipo !== 'fatura'; }
+  function groupBaseName(p) { return p.parcelaGrupo ? String(p.nome).replace(/\s*\(\d+\/\d+\)\s*$/, '') : p.nome; }
+  function openPaymentEdit(pid) {
+    const p = payments.find(x => x.id === pid);
+    if (!canEditPayment(p)) return;
+    editingPid = pid;
+    const isCard = p.tipo === 'cartao', isRec = p.natureza === 'receita';
+    $('peError').textContent = '';
+    $('peTitle').textContent = isCard ? 'Editar compra no cartão' : isRec ? 'Editar recebimento' : 'Editar lançamento';
+    $('peCartaoWrap').hidden = !isCard;
+    if (isCard) {
+      $('peCartao').innerHTML = (settings.cartoes || []).map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+      $('peCartao').value = p.cartaoId;
+    }
+    $('peCatWrap').hidden = isRec;
+    if (!isRec) fillCategorySelect($('peCategoria'), p.categoria || 'Outros', 'spend');
+    $('peNome').value = groupBaseName(p);
+    $('peValor').value = p.valor;
+    $('peData').value = p.data || '';
+    $('peDataLabel').textContent = isCard ? 'Data da compra' : 'Data';
+    const grp = p.parcelaGrupo ? payments.filter(x => x.parcelaGrupo === p.parcelaGrupo) : [];
+    $('peGrupoWrap').hidden = grp.length < 2;
+    $('peGrupo').checked = true;
+    $('peGrupoTxt').textContent = `Aplicar a todas as ${grp.length} parcelas (parcela ${p.parcela}/${p.totalParcelas})`;
+    $('payEditOverlay').hidden = false;
+  }
+  function closePaymentEdit() { $('payEditOverlay').hidden = true; editingPid = null; }
+  function handlePaymentEditSubmit(e) {
+    e.preventDefault();
+    const p = payments.find(x => x.id === editingPid);
+    if (!p) { closePaymentEdit(); return; }
+    const nome = $('peNome').value.trim(), valor = parseFloat($('peValor').value), data = $('peData').value;
+    const err = $('peError');
+    if (!nome) { err.textContent = 'Informe uma descrição.'; return; }
+    if (!(valor > 0)) { err.textContent = 'Informe um valor válido.'; return; }
+    if (!data) { err.textContent = 'Informe a data.'; return; }
+    const isCard = p.tipo === 'cartao', isRec = p.natureza === 'receita';
+    const cat = isRec ? p.categoria : ($('peCategoria').value === '__new__' ? 'Outros' : $('peCategoria').value);
+    const cartaoId = isCard ? $('peCartao').value : p.cartaoId;
+    const all = !$('peGrupoWrap').hidden && $('peGrupo').checked;
+    if (all) {
+      const first = addMonthsISO(data, -(p.parcela - 1));
+      payments.filter(x => x.parcelaGrupo === p.parcelaGrupo).forEach(x => {
+        x.nome = `${nome} (${x.parcela}/${x.totalParcelas})`;
+        x.categoria = cat; x.cartaoId = cartaoId; x.valor = valor;
+        x.data = addMonthsISO(first, x.parcela - 1);
+      });
+    } else {
+      p.nome = p.parcelaGrupo ? `${nome} (${p.parcela}/${p.totalParcelas})` : nome;
+      p.categoria = cat; p.valor = valor; p.data = data;
+      if (isCard) p.cartaoId = cartaoId;
+    }
+    savePayments(); closePaymentEdit(); renderAll();
+    showToast('Lançamento atualizado.');
   }
   function deletePayment(pid) {
     const p = payments.find(x => x.id === pid);
@@ -2410,6 +2509,8 @@
       handleRowClick(e);
     });
     $('listContent').addEventListener('click', e => {
+      const ed = e.target.closest('button[data-edpid]');
+      if (ed) { openPaymentEdit(ed.dataset.edpid); return; }
       const t = e.target.closest('button[data-pid]');
       if (t) { deletePayment(t.dataset.pid); return; }
       handleRowClick(e);
@@ -2439,7 +2540,14 @@
     $('btnPurchaseBud').addEventListener('click', openPurchaseModal);
     $('btnNewLimit').addEventListener('click', () => openLimitModal(null));
     $('budgetCats').addEventListener('click', e => { const r = e.target.closest('.bd-row'); if (r && r.dataset.cat && r.dataset.cat !== UNDETAILED_CAT) openLimitModal(r.dataset.cat); });
-    $('budgetHistory').addEventListener('click', e => { const b = e.target.closest('button[data-pid]'); if (b) deletePayment(b.dataset.pid); });
+    $('budgetHistory').addEventListener('click', e => {
+      const ed = e.target.closest('button[data-edpid]'); if (ed) { openPaymentEdit(ed.dataset.edpid); return; }
+      const b = e.target.closest('button[data-pid]'); if (b) deletePayment(b.dataset.pid);
+    });
+    $('payEditForm').addEventListener('submit', handlePaymentEditSubmit);
+    $('peCancel').addEventListener('click', closePaymentEdit);
+    $('payEditOverlay').addEventListener('click', e => { if (e.target.id === 'payEditOverlay') closePaymentEdit(); });
+    $('peCategoria').addEventListener('change', e => onCategoryChange(e.target));
     $('expenseForm').addEventListener('submit', handleExpenseSubmit);
     $('expenseCancel').addEventListener('click', closeExpenseModal);
     $('eCategoria').addEventListener('change', e => onCategoryChange(e.target));
@@ -2469,6 +2577,8 @@
       if (editInv) { const [cid, key] = editInv.dataset.inv.split('|'); openInvoiceModal({ cartaoId: cid, key }); return; }
       const pay = e.target.closest('[data-action="payinv"]');
       if (pay) { const [cid, key] = pay.dataset.inv.split('|'); payInvoice(cid, key); return; }
+      const ed = e.target.closest('button[data-edpid]');
+      if (ed) { openPaymentEdit(ed.dataset.edpid); return; }
       const del = e.target.closest('button[data-pid]');
       if (del) deletePayment(del.dataset.pid);
     });
