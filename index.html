@@ -237,6 +237,7 @@
   .cc-inv-title { font-weight: 700; font-size: .92rem; }
   .cc-inv-sub { font-size: .76rem; color: var(--text-soft); margin-top: 2px; }
   .cc-inv-total { font-weight: 800; font-size: 1.3rem; white-space: nowrap; }
+  .cc-inv-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .cc-status { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 700; margin-top: 10px; }
 
   /* Aviso rápido (toast) */
@@ -380,6 +381,7 @@
         <button class="ff-btn ff-btn-ghost" id="btnNewLimit">Definir limite</button>
       </div>
       <div id="budgetPie"></div>
+      <div id="budgetCards"></div>
       <div class="ff-section-title">Por categoria</div>
       <div id="budgetCats"></div>
       <div class="ff-section-title">Histórico do mês</div>
@@ -402,6 +404,7 @@
       <p class="ff-settings-sub" style="margin:-4px 0 10px;">Faturas pelo mês de <b>vencimento</b>. Cada compra conta no limite do mês em que foi feita, e a fatura só entra no caixa quando vence.</p>
       <div class="bd-actions">
         <button class="ff-btn ff-btn-primary" id="btnNewPurchase">+ Compra no cartão</button>
+        <button class="ff-btn ff-btn-ghost" id="btnNewInvoice">+ Fatura (informar total)</button>
         <button class="ff-btn ff-btn-ghost" id="btnNewCard">+ Novo cartão</button>
       </div>
       <div id="cardsList"></div>
@@ -488,6 +491,7 @@
       <div style="display:flex; gap:14px;">
         <button type="button" class="ff-delete-link" id="formDelete" hidden>Excluir</button>
         <button type="button" class="ff-link" id="formDuplicate" hidden style="margin:0;">Duplicar</button>
+        <button type="button" class="ff-link" id="formToInvoice" hidden style="margin:0;">Converter em fatura do cartão</button>
       </div>
       <div style="display:flex; gap:10px; margin-left:auto;">
         <button type="button" class="ff-btn ff-btn-ghost" id="formCancel">Cancelar</button>
@@ -557,6 +561,19 @@
       <label>Data da compra</label>
       <input id="pData" type="date" required>
     </div>
+    <div class="ff-field-row">
+      <div class="ff-field">
+        <label>Parcelas</label>
+        <select id="pParcelas"></select>
+      </div>
+      <div class="ff-field" id="pModoWrap" hidden>
+        <label>O valor informado é</label>
+        <select id="pModo">
+          <option value="total">O total da compra</option>
+          <option value="parcela">O valor de cada parcela</option>
+        </select>
+      </div>
+    </div>
     <div class="ff-settings-sub" id="pHint"></div>
     <div class="ff-error" id="purchaseError"></div>
     <div class="ff-modal-actions">
@@ -587,12 +604,48 @@
         <input id="cVenc" type="number" min="1" max="31" required>
       </div>
     </div>
-    <div class="ff-settings-sub">O fechamento é o dia em que a fatura “vira”: compras feitas depois dele entram na fatura seguinte.</div>
+    <label class="ff-check" style="margin:-2px 0 6px;"><input type="checkbox" id="cFimMes"> Fecha no último dia do mês</label>
+    <div class="ff-settings-sub" style="margin-bottom:12px;">Marcando, todas as compras do mês vão para a fatura do mês seguinte. Senão, compras depois do dia de fechamento entram na fatura seguinte.</div>
+    <div class="ff-field">
+      <label>Limite de gastos por mês (opcional)</label>
+      <input id="cLimite" type="number" min="0" step="0.01" placeholder="Ex: 3000">
+    </div>
+    <div class="ff-settings-sub">Conta as compras do mês em que foram feitas (e o total das faturas lançadas, no mês em que foram geradas). Você recebe aviso quando chegar perto.</div>
     <div class="ff-error" id="cardError"></div>
     <div class="ff-modal-actions">
       <button type="button" class="ff-delete-link" id="cardDelete" hidden>Excluir cartão</button>
       <div style="display:flex; gap:10px; margin-left:auto;">
         <button type="button" class="ff-btn ff-btn-ghost" id="cardCancel">Cancelar</button>
+        <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ===== Fatura do cartão (informar total / vencimento) ===== -->
+<div class="ff-overlay" id="invoiceOverlay" hidden>
+  <form class="ff-modal" id="invoiceForm">
+    <h2 id="invoiceFormTitle">Fatura do cartão</h2>
+    <div class="ff-field">
+      <label>Cartão</label>
+      <select id="iCartao"></select>
+    </div>
+    <div class="ff-field-row">
+      <div class="ff-field">
+        <label>Vencimento</label>
+        <input id="iVenc" type="date" required>
+      </div>
+      <div class="ff-field">
+        <label>Total da fatura (R$)</label>
+        <input id="iTotal" type="number" min="0" step="0.01" placeholder="Ex: 1500">
+      </div>
+    </div>
+    <div class="ff-settings-sub">Informe o total que veio no banco. Se você lançou compras, a diferença aparece como “sem detalhamento”. O gasto conta no limite do <b>mês em que a fatura foi gerada</b> (não no mês em que vence).</div>
+    <div class="ff-error" id="invoiceError"></div>
+    <div class="ff-modal-actions">
+      <button type="button" class="ff-delete-link" id="invoiceRemove" hidden>Remover total informado</button>
+      <div style="display:flex; gap:10px; margin-left:auto;">
+        <button type="button" class="ff-btn ff-btn-ghost" id="invoiceCancel">Cancelar</button>
         <button type="submit" class="ff-btn ff-btn-primary">Salvar</button>
       </div>
     </div>
@@ -749,6 +802,8 @@
   let settings = defaultSettings();
   let editingId = null;
   let editingCardId = null;
+  let editingInvoice = null;     // { cartaoId, key } ao editar uma fatura
+  let convertItemId = null;      // lançamento antigo que está sendo convertido em fatura
   let activeListFilter = 'todos';
   let activeListCat = '';
   let activeListSort = 'vencimento';
@@ -770,6 +825,7 @@
   };
   // Categoria reservada: a fatura do cartão. Só movimenta o caixa; o gasto já é contado pelas compras de cada mês.
   const CARD_CAT = 'Cartão de crédito';
+  const UNDETAILED_CAT = 'Cartão (sem detalhamento)';  // total de fatura informado sem as compras detalhadas
   const DEFAULT_CATS = ['Moradia', 'Contas de casa', 'Supermercado', 'Lanchonete e restaurantes', 'Combustível', 'Transporte', 'Saúde', 'Educação', 'Lazer', 'Vestuário', 'Financiamentos', 'Outros'];
   const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -778,7 +834,7 @@
   const STATUS_RANK = { overdue: 0, soon: 1, ok: 2, done: 3 };
   const PIE_COLORS = ['#2f6f5e', '#e0a83d', '#d64545', '#4b7bbd', '#8a5fb3', '#3fa7a0', '#c9733d', '#7f8c5a', '#b34f7a', '#6d7b8a'];
 
-  function defaultSettings() { return { limites: {}, categorias: [], cartoes: [], alertaDias: 3, alertaPct: 80 }; }
+  function defaultSettings() { return { limites: {}, categorias: [], cartoes: [], faturas: {}, alertaDias: 3, alertaPct: 80 }; }
   // =====================================================================
   // Utilitários
   // =====================================================================
@@ -854,6 +910,7 @@
       if (!settings.limites) settings.limites = {};
       if (!Array.isArray(settings.categorias)) settings.categorias = [];
       if (!Array.isArray(settings.cartoes)) settings.cartoes = [];
+      if (!settings.faturas || typeof settings.faturas !== 'object') settings.faturas = {};
     });
   }
   function stopDataSync() {
@@ -973,6 +1030,21 @@
   }
 
   // ----- Cartões e faturas -----
+  function clampDay(n) { return Math.max(1, Math.min(31, Number(n) || 1)); }
+  // Período e vencimento padrão da fatura cuja chave é 'AAAA-MM' (mês do vencimento)
+  function invoicePeriod(card, key) {
+    const [dy, dm1] = key.split('-').map(Number);
+    const dm = dm1 - 1;
+    const fech = clampDay(card.fechamento), venc = clampDay(card.vencimento);
+    let cy = dy, cm = dm;
+    if (venc <= fech) { cm -= 1; if (cm < 0) { cm = 11; cy -= 1; } }
+    const closing = new Date(cy, cm, Math.min(fech, daysInMonth(cy, cm)));
+    let py = cy, pm = cm - 1; if (pm < 0) { pm = 11; py -= 1; }
+    const prevClosing = new Date(py, pm, Math.min(fech, daysInMonth(py, pm)));
+    const start = new Date(prevClosing.getFullYear(), prevClosing.getMonth(), prevClosing.getDate() + 1);
+    const due = new Date(dy, dm, Math.min(venc, daysInMonth(dy, dm)));
+    return { closing, start, due };
+  }
   function cardById(id) { return (settings.cartoes || []).find(c => c.id === id); }
   // Em qual fatura cai uma compra feita em purchaseISO?
   function invoiceFor(card, purchaseISO) {
@@ -992,15 +1064,30 @@
   }
   function cardInvoices() {
     const map = {};
+    const get = (card, key) => {
+      const k = card.id + '|' + key;
+      if (!map[k]) {
+        const per = invoicePeriod(card, key);
+        map[k] = { cartaoId: card.id, card, key, due: per.due, closing: per.closing, start: per.start, detalhado: 0, informado: null, paid: 0, purchases: [] };
+      }
+      return map[k];
+    };
     payments.forEach(p => {
-      if (p.tipo !== 'cartao') return;
+      if (p.tipo !== 'cartao' || !p.data) return;
       const card = cardById(p.cartaoId);
-      if (!card || !p.data) return;
-      const inf = invoiceFor(card, p.data);
-      const k = card.id + '|' + inf.key;
-      const inv = map[k] || (map[k] = { cartaoId: card.id, card, key: inf.key, due: inf.due, closing: inf.closing, start: inf.start, total: 0, paid: 0, purchases: [] });
-      inv.total += Number(p.valor) || 0;
+      if (!card) return;
+      const inv = get(card, invoiceFor(card, p.data).key);
+      inv.detalhado += Number(p.valor) || 0;
       inv.purchases.push(p);
+    });
+    // totais/vencimentos informados à mão (valem mesmo sem nenhuma compra lançada)
+    Object.entries(settings.faturas || {}).forEach(([k, f]) => {
+      const [cid, key] = k.split('|');
+      const card = cardById(cid);
+      if (!card || !f) return;
+      const inv = get(card, key);
+      if (f.total != null && f.total !== '' && !isNaN(Number(f.total))) inv.informado = Number(f.total);
+      if (f.due) inv.due = parseISO(f.due);
     });
     payments.forEach(p => {
       if (p.tipo !== 'fatura') return;
@@ -1008,8 +1095,14 @@
       if (inv) inv.paid += Number(p.valor) || 0;
     });
     return Object.values(map).map(inv => {
+      inv.detalhado = Math.round(inv.detalhado * 100) / 100;
+      inv.total = inv.informado != null ? inv.informado : inv.detalhado;
+      inv.semDetalhe = Math.max(0, Math.round((inv.total - inv.detalhado) * 100) / 100);
       inv.remaining = Math.max(0, Math.round((inv.total - inv.paid) * 100) / 100);
       inv.isPaid = inv.remaining < 0.005;
+      // o gasto "sem detalhamento" pertence ao mês do meio do período da fatura (e não ao mês em que ela vence)
+      const mid = new Date((inv.start.getTime() + inv.closing.getTime()) / 2);
+      inv.attrYear = mid.getFullYear(); inv.attrMonth = mid.getMonth();
       return inv;
     });
   }
@@ -1028,11 +1121,12 @@
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const isCurrent = today.getFullYear() === y && today.getMonth() === m;
     const start = new Date(y, m, 1), end = new Date(y, m + 1, 0);
-    const out = { receitaPaga: 0, receitaPrev: 0, despesaPaga: 0, despesaPrev: 0, cats: {}, spendList: [] };
+    const out = { receitaPaga: 0, receitaPrev: 0, despesaPaga: 0, despesaPrev: 0, cats: {}, cardSpend: {}, spendList: [] };
     const cat = c => out.cats[c] || (out.cats[c] = { pago: 0, previsto: 0 });
+    const cs = id => out.cardSpend[id] || (out.cardSpend[id] = { pago: 0, semDetalhe: 0 });
     payments.filter(p => (p.data || '').slice(0, 7) === key).forEach(p => {
       const v = Number(p.valor) || 0;
-      if (p.tipo === 'cartao') { cat(p.categoria || 'Outros').pago += v; out.spendList.push(p); return; }
+      if (p.tipo === 'cartao') { cat(p.categoria || 'Outros').pago += v; cs(p.cartaoId).pago += v; out.spendList.push(p); return; }
       if (p.natureza === 'receita') { out.receitaPaga += v; return; }
       out.despesaPaga += v;
       if (!isFaturaPayment(p)) { cat(p.categoria || 'Outros').pago += v; out.spendList.push(p); }
@@ -1049,9 +1143,15 @@
         if (catOf(i) !== CARD_CAT) cat(catOf(i)).previsto += v;
       }
     });
-    pendingInvoices().forEach(inv => {
+    cardInvoices().forEach(inv => {
+      // caixa: fatura a pagar que vence neste mês
       const d = inv.due;
-      if ((d >= start && d <= end) || (isCurrent && d < start)) out.despesaPrev += inv.remaining;
+      if (!inv.isPaid && inv.total > 0 && ((d >= start && d <= end) || (isCurrent && d < start))) out.despesaPrev += inv.remaining;
+      // gasto: total informado sem detalhar conta no mês em que a fatura foi gerada
+      if (inv.semDetalhe > 0 && inv.attrYear === y && inv.attrMonth === m) {
+        cs(inv.cartaoId).semDetalhe += inv.semDetalhe;
+        cat(UNDETAILED_CAT).pago += inv.semDetalhe;
+      }
     });
     return out;
   }
@@ -1078,6 +1178,14 @@
       const total = v.pago + v.previsto;
       const ls = limitStatus(total, lim);
       if (ls && ls.level !== 'ok') out.push({ kind: ls.level === 'over' ? 'limit-over' : 'limit-near', cat: c, pct: ls.pct, total, limit: lim });
+    });
+    (settings.cartoes || []).forEach(card => {
+      const lim = Number(card.limite) || 0;
+      if (!(lim > 0)) return;
+      const v = ms.cardSpend[card.id] || { pago: 0, semDetalhe: 0 };
+      const total = v.pago + v.semDetalhe;
+      const ls = limitStatus(total, lim);
+      if (ls && ls.level !== 'ok') out.push({ kind: ls.level === 'over' ? 'limit-over' : 'limit-near', cat: 'Cartão ' + card.nome, pct: ls.pct, total, limit: lim });
     });
     return out;
   }
@@ -1407,15 +1515,41 @@
   // Página: Gastos e limites
   // =====================================================================
 
+  function cardSpendRowHtml(card, cs) {
+    const total = cs.pago + cs.semDetalhe;
+    const lim = Number(card.limite) || 0;
+    const ls = limitStatus(total, lim);
+    const detail = `compras ${fmtMoney(cs.pago)}${cs.semDetalhe ? ` · sem detalhamento ${fmtMoney(cs.semDetalhe)}` : ''}`;
+    let note;
+    if (!ls) note = `<div class="bd-note">Sem limite definido · ${detail}</div>`;
+    else if (ls.level === 'over') note = `<div class="bd-note over">Acima do limite em ${fmtMoney(total - lim)} · ${detail}</div>`;
+    else if (ls.level === 'near') note = `<div class="bd-note near">Perto do limite (${Math.round(ls.pct)}%) · resta ${fmtMoney(lim - total)}</div>`;
+    else note = `<div class="bd-note">Dentro do limite · resta ${fmtMoney(lim - total)}</div>`;
+    return `
+      <div class="bd-row" data-card="${card.id}">
+        <div class="bd-row-top">
+          <span class="bd-name">💳 ${escapeHtml(card.nome)}</span>
+          <span class="bd-amount">${fmtMoney(total)}${lim > 0 ? ` <small>de ${fmtMoney(lim)}</small>` : ''}</span>
+        </div>
+        ${barHtml(total, 0, lim)}
+        ${note}
+      </div>`;
+  }
   function renderBudget() {
     $('budMonthLabel').textContent = `${MONTHS[budMonth]} ${budYear}`;
     const ms = monthStats(budYear, budMonth);
-    const names = allCategories().filter(c => limitOf(c) > 0 || (ms.cats[c] && ms.cats[c].pago + ms.cats[c].previsto > 0));
+    const spent = c => ms.cats[c] ? ms.cats[c].pago + ms.cats[c].previsto : 0;
+    const names = Array.from(new Set(allCategories().filter(c => limitOf(c) > 0 || spent(c) > 0).concat(Object.keys(ms.cats).filter(c => spent(c) > 0))));
     const rows = names.map(c => [c, ms.cats[c] || { pago: 0, previsto: 0 }])
       .sort((a, b) => (b[1].pago + b[1].previsto) - (a[1].pago + a[1].previsto));
 
     const slices = rows.map(([c, v]) => ({ label: c, value: v.pago + v.previsto })).filter(s => s.value > 0);
     $('budgetPie').innerHTML = slices.length ? `<div class="ff-section-title">Distribuição dos gastos</div>${pieHtml(slices, 'gastos do mês')}` : '';
+
+    const cards = settings.cartoes || [];
+    $('budgetCards').innerHTML = cards.length
+      ? `<div class="ff-section-title">Cartões de crédito</div>${cards.map(card => cardSpendRowHtml(card, ms.cardSpend[card.id] || { pago: 0, semDetalhe: 0 })).join('')}`
+      : '';
 
     $('budgetCats').innerHTML = rows.length
       ? rows.map(([c, v]) => catRowHtml(c, v, false)).join('')
@@ -1450,7 +1584,7 @@
     const name = $('lName').value.trim();
     const valor = parseFloat($('lValor').value);
     if (!name) { $('limitError').textContent = 'Informe a categoria.'; return; }
-    if (name === CARD_CAT) { $('limitError').textContent = 'A fatura do cartão não tem limite: o gasto é contado pelas compras.'; return; }
+    if (name === CARD_CAT || name === UNDETAILED_CAT) { $('limitError').textContent = 'Essa linha não tem limite próprio. Para limitar o cartão, edite o cartão (aba Cartões).'; return; }
     addCustomCategory(name);
     if (valor > 0) settings.limites[name] = valor; else delete settings.limites[name];
     saveSettings(); closeLimitModal(); renderAll();
@@ -1499,18 +1633,28 @@
     savePayments(); closeExpenseModal(); renderAll();
     warnIfLimitReached(categoria, data);
   }
-  function warnIfLimitReached(cat, dateStr) {
+  function warnIfLimitReached(cat, dateStr, cartaoId) {
     const d = parseISO(dateStr);
     const now = new Date();
     if (d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth()) return;
-    const v = monthStats(now.getFullYear(), now.getMonth()).cats[cat];
-    if (!v) return;
-    const lim = limitOf(cat);
-    const ls = limitStatus(v.pago + v.previsto, lim);
-    if (!ls || ls.level === 'ok') return;
-    showToast(ls.level === 'over'
-      ? `🚨 ${cat}: limite estourado (${fmtMoney(v.pago + v.previsto)} de ${fmtMoney(lim)})`
-      : `⚠️ ${cat}: já usou ${Math.round(ls.pct)}% do limite`, { ms: 8000 });
+    const ms = monthStats(now.getFullYear(), now.getMonth());
+    const msgs = [];
+    const v = ms.cats[cat];
+    if (v) {
+      const lim = limitOf(cat);
+      const ls = limitStatus(v.pago + v.previsto, lim);
+      if (ls && ls.level === 'over') msgs.push(`🚨 ${cat}: limite estourado (${fmtMoney(v.pago + v.previsto)} de ${fmtMoney(lim)})`);
+      else if (ls && ls.level === 'near') msgs.push(`⚠️ ${cat}: já usou ${Math.round(ls.pct)}% do limite`);
+    }
+    const card = cartaoId ? cardById(cartaoId) : null;
+    if (card && Number(card.limite) > 0) {
+      const cs = ms.cardSpend[card.id] || { pago: 0, semDetalhe: 0 };
+      const total = cs.pago + cs.semDetalhe;
+      const ls = limitStatus(total, Number(card.limite));
+      if (ls && ls.level === 'over') msgs.push(`🚨 Cartão ${card.nome}: limite do mês estourado (${fmtMoney(total)} de ${fmtMoney(card.limite)})`);
+      else if (ls && ls.level === 'near') msgs.push(`⚠️ Cartão ${card.nome}: já usou ${Math.round(ls.pct)}% do limite do mês`);
+    }
+    if (msgs.length) showToast(msgs.join('  ·  '), { ms: 9000 });
   }
   // =====================================================================
   // Página: Cartões
@@ -1521,22 +1665,18 @@
     const byCat = {};
     inv.purchases.forEach(p => { const c = p.categoria || 'Outros'; byCat[c] = (byCat[c] || 0) + (Number(p.valor) || 0); });
     const slices = Object.entries(byCat).map(([label, value]) => ({ label, value }));
+    if (inv.semDetalhe > 0) slices.push({ label: 'Sem detalhamento', value: inv.semDetalhe });
     const statusHtml = inv.isPaid
       ? '<span class="cc-status pos">✓ Fatura paga</span>'
       : `<span class="cc-status"><span class="ff-dot ${st.status}"></span>${dueText('despesa', st)}</span>`;
-    const payBtn = inv.isPaid ? '' : `<div><button class="ff-btn ff-btn-primary" style="margin-top:10px;" data-action="payinv" data-inv="${inv.cartaoId}|${inv.key}">Marcar como paga</button></div>`;
+    const actions = `<div class="cc-inv-actions">${inv.isPaid ? '' : `<button class="ff-btn ff-btn-primary" data-action="payinv" data-inv="${inv.cartaoId}|${inv.key}">Marcar como paga</button>`}<button class="ff-btn ff-btn-ghost" data-action="edit-invoice" data-inv="${inv.cartaoId}|${inv.key}">Editar vencimento / total</button></div>`;
     const list = inv.purchases.slice().sort((a, b) => (b.data || '').localeCompare(a.data || ''));
-    return `
-      <div class="cc-inv">
-        <div class="cc-inv-top">
-          <div>
-            <div class="cc-inv-title">Fatura com vencimento em ${fmtDateFull(inv.due)}</div>
-            <div class="cc-inv-sub">Compras de ${fmtDateShort(inv.start)} a ${fmtDateShort(inv.closing)}</div>
-          </div>
-          <div class="cc-inv-total">${fmtMoney(inv.total)}</div>
-        </div>
-        ${statusHtml}${payBtn}
-      </div>
+    const comp = inv.informado != null
+      ? `Total informado pelo banco${inv.purchases.length ? ` · compras lançadas ${fmtMoney(inv.detalhado)}${inv.semDetalhe > 0 ? ` · sem detalhamento ${fmtMoney(inv.semDetalhe)}` : ''}` : ''}`
+      : '';
+    const detail = !inv.purchases.length
+      ? `<div class="ff-empty-note" style="text-align:left; padding:12px 0;">Só o total da fatura foi informado. Para ver o que foi gasto em cada categoria, lance as compras em “+ Compra no cartão”.</div>`
+      : `
       <div class="ff-section-title" style="margin-top:14px;">O que foi gasto nesta fatura</div>
       ${pieHtml(slices, 'fatura')}
       <div class="ff-table-wrap">
@@ -1552,6 +1692,19 @@
             </tr>`).join('')}</tbody>
         </table>
       </div>`;
+    return `
+      <div class="cc-inv">
+        <div class="cc-inv-top">
+          <div>
+            <div class="cc-inv-title">Fatura com vencimento em ${fmtDateFull(inv.due)}</div>
+            <div class="cc-inv-sub">Compras de ${fmtDateShort(inv.start)} a ${fmtDateShort(inv.closing)}</div>
+            ${comp ? `<div class="cc-inv-sub">${comp}</div>` : ''}
+          </div>
+          <div class="cc-inv-total">${fmtMoney(inv.total)}</div>
+        </div>
+        ${statusHtml}${actions}
+      </div>
+      ${detail}`;
   }
   function renderCards() {
     $('cardMonthLabel').textContent = `${monthName(cardMonth)} ${cardYear}`;
@@ -1563,24 +1716,93 @@
       return;
     }
     const invs = cardInvoices();
-    const key = `${cardYear}-${pad2(cardMonth + 1)}`;
+    const monthEnd = new Date(cardYear, cardMonth + 1, 0);
     el.innerHTML = cards.map(card => {
-      const inv = invs.find(i => i.cartaoId === card.id && i.key === key);
+      const mine = invs.filter(i => i.cartaoId === card.id);
+      const here = mine.filter(i => i.due.getFullYear() === cardYear && i.due.getMonth() === cardMonth).sort((a, b) => a.due - b.due);
       let body;
-      if (inv) body = invoiceBlockHtml(inv);
+      if (here.length) body = here.map(invoiceBlockHtml).join('');
       else {
-        const next = invs.filter(i => i.cartaoId === card.id && i.key > key).sort((a, b) => a.due - b.due)[0];
+        const next = mine.filter(i => i.due > monthEnd).sort((a, b) => a.due - b.due)[0];
         body = `<div class="ff-empty-note" style="padding:14px 0; text-align:left;">Sem fatura com vencimento em ${MONTHS[cardMonth]}.${next ? ` Próxima: ${fmtDateFull(next.due)}.` : ''}</div>`;
       }
+      const fech = clampDay(card.fechamento) >= 31 ? 'fecha no último dia do mês' : `fecha dia ${card.fechamento}`;
       return `
         <div class="cc-card">
           <div class="cc-head">
-            <div><div class="cc-name">💳 ${escapeHtml(card.nome)}</div><div class="cc-sub">Fecha dia ${card.fechamento} · vence dia ${card.vencimento}</div></div>
+            <div><div class="cc-name">💳 ${escapeHtml(card.nome)}</div><div class="cc-sub">${fech} · vence dia ${card.vencimento}${Number(card.limite) > 0 ? ` · limite de gastos ${fmtMoney(card.limite)}/mês` : ''}</div></div>
             <button class="ff-link-inline" data-action="edit-card" data-card="${card.id}">editar</button>
           </div>
           ${body}
         </div>`;
     }).join('');
+  }
+
+  // ----- Fatura: informar total e vencimento -----
+  function openInvoiceModal(opts) {
+    opts = opts || {};
+    if (!(settings.cartoes || []).length) { showToast('Cadastre um cartão primeiro.'); openCardModal(null); return; }
+    editingInvoice = opts.cartaoId && opts.key ? { cartaoId: opts.cartaoId, key: opts.key } : null;
+    convertItemId = opts.convertItemId || null;
+    const inv = editingInvoice ? cardInvoices().find(i => i.cartaoId === editingInvoice.cartaoId && i.key === editingInvoice.key) : null;
+    $('invoiceError').textContent = '';
+    $('iCartao').innerHTML = settings.cartoes.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
+    let cid = opts.cartaoId || settings.cartoes[0].id;
+    if (convertItemId && !opts.cartaoId) {
+      const nm = String(opts.nome || '').toLowerCase();
+      const hit = settings.cartoes.find(c => nm.includes(String(c.nome).toLowerCase()));
+      if (hit) cid = hit.id;
+    }
+    $('iCartao').value = cid;
+    $('iCartao').disabled = !!editingInvoice;
+    $('invoiceFormTitle').textContent = editingInvoice ? 'Editar fatura' : (convertItemId ? 'Converter em fatura do cartão' : 'Fatura do cartão');
+    $('iVenc').value = opts.due || (inv ? isoDate(inv.due) : isoDate(new Date()));
+    $('iTotal').value = opts.total != null ? opts.total : (inv && inv.informado != null ? inv.informado : '');
+    $('iTotal').placeholder = inv && inv.detalhado > 0 ? `Compras lançadas: ${fmtMoney(inv.detalhado)}` : 'Ex: 1500';
+    $('invoiceRemove').hidden = !(inv && inv.informado != null);
+    $('invoiceOverlay').hidden = false;
+  }
+  function closeInvoiceModal() { $('invoiceOverlay').hidden = true; editingInvoice = null; convertItemId = null; $('iCartao').disabled = false; }
+  function handleInvoiceSubmit(e) {
+    e.preventDefault();
+    const cid = $('iCartao').value;
+    const due = $('iVenc').value;
+    const totalStr = $('iTotal').value.trim();
+    const total = totalStr === '' ? null : parseFloat(totalStr);
+    const err = $('invoiceError');
+    if (!due) { err.textContent = 'Informe o vencimento.'; return; }
+    const key = editingInvoice ? editingInvoice.key : due.slice(0, 7);
+    const existing = cardInvoices().find(i => i.cartaoId === cid && i.key === key);
+    const hasPurchases = !!(existing && existing.purchases.length);
+    if (total === null && !hasPurchases) { err.textContent = 'Informe o total da fatura.'; return; }
+    if (total !== null && !(total > 0)) { err.textContent = 'O total deve ser maior que zero.'; return; }
+    settings.faturas[cid + '|' + key] = { total, due };
+    const upd = { settings: JSON.stringify(settings) };
+    if (convertItemId) { items = items.filter(i => i.id !== convertItemId); upd.items = JSON.stringify(items); }
+    fbSave(upd);
+    const goDue = parseISO(due);
+    closeInvoiceModal();
+    cardYear = goDue.getFullYear(); cardMonth = goDue.getMonth();
+    renderAll();
+    showToast('Fatura salva.');
+  }
+  function handleInvoiceRemove() {
+    if (!editingInvoice) return;
+    const k = editingInvoice.cartaoId + '|' + editingInvoice.key;
+    const inv = cardInvoices().find(i => i.cartaoId === editingInvoice.cartaoId && i.key === editingInvoice.key);
+    if (inv && inv.purchases.length) settings.faturas[k] = { total: null, due: (settings.faturas[k] || {}).due || null };
+    else delete settings.faturas[k];
+    saveSettings(); closeInvoiceModal(); renderAll();
+  }
+  function looksLikeInvoice(item) {
+    return !!item && item.tipo === 'conta' && (item.categoria === CARD_CAT || /fatura|cart[aã]o/i.test(item.nome || ''));
+  }
+  function handleFormToInvoice() {
+    const item = items.find(i => i.id === editingId);
+    if (!item) return;
+    if (!(settings.cartoes || []).length) { showToast('Cadastre um cartão primeiro (aba Cartões).'); return; }
+    closeItemModal();
+    openInvoiceModal({ due: item.dataVencimento, total: item.valorParcela, nome: item.nome, convertItemId: item.id });
   }
 
   // ----- Cartão (cadastro) -----
@@ -1589,8 +1811,12 @@
     const c = id ? cardById(id) : null;
     $('cardFormTitle').textContent = c ? 'Editar cartão' : 'Novo cartão';
     $('cNome').value = c ? c.nome : '';
+    const fimMes = !!(c && clampDay(c.fechamento) >= 31);
+    $('cFimMes').checked = fimMes;
     $('cFech').value = c ? c.fechamento : '';
+    $('cFech').disabled = fimMes;
     $('cVenc').value = c ? c.vencimento : '';
+    $('cLimite').value = c && Number(c.limite) > 0 ? c.limite : '';
     $('cardError').textContent = '';
     $('cardDelete').hidden = !c;
     $('cardOverlay').hidden = false;
@@ -1599,12 +1825,16 @@
   function handleCardSubmit(e) {
     e.preventDefault();
     const nome = $('cNome').value.trim();
-    const fech = parseInt($('cFech').value, 10), venc = parseInt($('cVenc').value, 10);
+    const fim = $('cFimMes').checked;
+    const fech = fim ? 31 : parseInt($('cFech').value, 10);
+    const venc = parseInt($('cVenc').value, 10);
+    const lim = parseFloat($('cLimite').value);
+    const limite = lim > 0 ? lim : null;
     const err = $('cardError');
     if (!nome) { err.textContent = 'Informe o nome do cartão.'; return; }
     if (!(fech >= 1 && fech <= 31) || !(venc >= 1 && venc <= 31)) { err.textContent = 'Os dias devem estar entre 1 e 31.'; return; }
-    if (editingCardId) Object.assign(cardById(editingCardId), { nome, fechamento: fech, vencimento: venc });
-    else settings.cartoes.push({ id: uid(), nome, fechamento: fech, vencimento: venc });
+    if (editingCardId) Object.assign(cardById(editingCardId), { nome, fechamento: fech, vencimento: venc, limite });
+    else settings.cartoes.push({ id: uid(), nome, fechamento: fech, vencimento: venc, limite });
     saveSettings(); closeCardModal(); renderAll();
   }
   function handleCardDelete() {
@@ -1619,12 +1849,38 @@
   }
 
   // ----- Compra no cartão -----
+  function addMonthsISO(iso, n) {
+    const d = parseISO(iso);
+    const t = d.getFullYear() * 12 + d.getMonth() + n;
+    const y = Math.floor(t / 12), m = t % 12;
+    return isoDate(new Date(y, m, Math.min(d.getDate(), new Date(y, m + 1, 0).getDate())));
+  }
+  // Divide em centavos; a diferença vai na última parcela.
+  function splitInstallments(valor, n, modo) {
+    if (modo === 'parcela') return Array.from({ length: n }, () => Math.round(valor * 100) / 100);
+    const cents = Math.round(valor * 100), base = Math.floor(cents / n);
+    return Array.from({ length: n }, (_, i) => (i === n - 1 ? cents - base * (n - 1) : base) / 100);
+  }
+  function purchaseParcelas() { return parseInt($('pParcelas').value, 10) || 1; }
   function updatePurchaseHint() {
     const card = cardById($('pCartao').value);
     const ds = $('pData').value;
+    const n = purchaseParcelas();
+    $('pModoWrap').hidden = n < 2;
     if (!card || !ds) { $('pHint').textContent = ''; return; }
     const inf = invoiceFor(card, ds);
-    $('pHint').textContent = `Entra na fatura com vencimento em ${fmtDateFull(inf.due)} e conta no limite de ${monthName(parseISO(ds).getMonth())}.`;
+    if (n < 2) {
+      $('pHint').textContent = `Entra na fatura com vencimento em ${fmtDateFull(inf.due)} e conta no limite de ${monthName(parseISO(ds).getMonth())}.`;
+      return;
+    }
+    const last = invoiceFor(card, addMonthsISO(ds, n - 1));
+    const v = parseFloat($('pValor').value);
+    let valTxt = '';
+    if (v > 0) {
+      const arr = splitInstallments(v, n, $('pModo').value);
+      valTxt = ` ${n}x de ${fmtMoney(arr[0])}${arr[n - 1] !== arr[0] ? ` (última ${fmtMoney(arr[n - 1])})` : ''}, total ${fmtMoney(arr.reduce((a, b) => a + b, 0))}.`;
+    }
+    $('pHint').textContent = `Cada parcela cai numa fatura: da primeira (vence ${fmtDateFull(inf.due)}) até a última (vence ${fmtDateFull(last.due)}). Cada uma conta no limite do seu mês.${valTxt}`;
   }
   function openPurchaseModal() {
     if (!(settings.cartoes || []).length) { showToast('Cadastre um cartão primeiro.'); openCardModal(null); return; }
@@ -1632,6 +1888,8 @@
     $('pCartao').innerHTML = settings.cartoes.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('');
     $('pNome').value = ''; $('pValor').value = '';
     $('pData').value = isoDate(new Date());
+    $('pParcelas').innerHTML = '<option value="1">À vista (1x)</option>' + Array.from({ length: 23 }, (_, i) => `<option value="${i + 2}">${i + 2}x</option>`).join('');
+    $('pParcelas').value = '1'; $('pModo').value = 'total';
     fillCategorySelect($('pCategoria'), 'Supermercado', 'spend');
     updatePurchaseHint();
     $('purchaseOverlay').hidden = false;
@@ -1643,14 +1901,26 @@
     const nome = $('pNome').value.trim();
     const valor = parseFloat($('pValor').value);
     const data = $('pData').value;
+    const n = purchaseParcelas();
     const categoria = $('pCategoria').value === '__new__' ? 'Outros' : $('pCategoria').value;
     const err = $('purchaseError');
     if (!nome) { err.textContent = 'Informe uma descrição.'; return; }
     if (!(valor > 0)) { err.textContent = 'Informe um valor válido.'; return; }
     if (!data) { err.textContent = 'Informe a data da compra.'; return; }
-    payments.push({ id: uid(), itemId: null, tipo: 'cartao', cartaoId, nome, categoria, valor, data, pagoEm: isoDate(new Date()), natureza: 'despesa' });
+    const hoje = isoDate(new Date());
+    if (n < 2) {
+      payments.push({ id: uid(), itemId: null, tipo: 'cartao', cartaoId, nome, categoria, valor, data, pagoEm: hoje, natureza: 'despesa' });
+    } else {
+      const grupo = uid(), valores = splitInstallments(valor, n, $('pModo').value);
+      valores.forEach((v, i) => payments.push({
+        id: uid(), itemId: null, tipo: 'cartao', cartaoId, nome: `${nome} (${i + 1}/${n})`, categoria,
+        valor: v, data: addMonthsISO(data, i), pagoEm: hoje, natureza: 'despesa',
+        parcelaGrupo: grupo, parcela: i + 1, totalParcelas: n
+      }));
+    }
     savePayments(); closePurchaseModal(); renderAll();
-    warnIfLimitReached(categoria, data);
+    warnIfLimitReached(categoria, data, cartaoId);
+    if (n >= 2) showToast(`Compra parcelada lançada em ${n} faturas.`);
   }
 
   // ----- Pagar a fatura -----
@@ -1666,8 +1936,8 @@
     });
   }
   function goToInvoice(cartaoId, key) {
-    const [y, m] = key.split('-').map(Number);
-    cardYear = y; cardMonth = m - 1;
+    const inv = cardInvoices().find(i => i.cartaoId === cartaoId && i.key === key);
+    if (inv) { cardYear = inv.due.getFullYear(); cardMonth = inv.due.getMonth(); }
     switchTab('cards');
   }
   // =====================================================================
@@ -1705,6 +1975,17 @@
   function deletePayment(pid) {
     const p = payments.find(x => x.id === pid);
     if (!p) return;
+    if (p.tipo === 'cartao' && p.parcelaGrupo) {
+      const rest = payments.filter(x => x.parcelaGrupo === p.parcelaGrupo);
+      if (rest.length > 1) {
+        if (confirm(`Esta compra é parcelada (${p.parcela}/${p.totalParcelas}).\n\nOK = excluir TODAS as ${rest.length} parcelas\nCancelar = escolher outra opção`)) {
+          payments = payments.filter(x => x.parcelaGrupo !== p.parcelaGrupo); savePayments(); renderAll();
+        } else if (confirm('Excluir somente esta parcela?')) {
+          payments = payments.filter(x => x.id !== pid); savePayments(); renderAll();
+        }
+        return;
+      }
+    }
     const msg = p.tipo === 'cartao' ? 'Excluir esta compra do cartão?' : 'Excluir este registro do histórico?\n(Isso não desfaz o pagamento no lançamento original.)';
     if (confirm(msg)) { payments = payments.filter(x => x.id !== pid); savePayments(); renderAll(); }
   }
@@ -1751,6 +2032,7 @@
     $('formError').textContent = '';
     $('formDelete').hidden = !item;
     $('formDuplicate').hidden = !item;
+    $('formToInvoice').hidden = !looksLikeInvoice(item);
     $('fTipo').value = item ? item.tipo : 'conta';
     $('fNome').value = item ? item.nome : '';
     fillCategorySelect($('fCategoria'), item ? catOf(item) : defaultCatForTipo($('fTipo').value), 'item');
@@ -2156,7 +2438,7 @@
     $('btnNewExpense').addEventListener('click', openExpenseModal);
     $('btnPurchaseBud').addEventListener('click', openPurchaseModal);
     $('btnNewLimit').addEventListener('click', () => openLimitModal(null));
-    $('budgetCats').addEventListener('click', e => { const r = e.target.closest('.bd-row'); if (r && r.dataset.cat) openLimitModal(r.dataset.cat); });
+    $('budgetCats').addEventListener('click', e => { const r = e.target.closest('.bd-row'); if (r && r.dataset.cat && r.dataset.cat !== UNDETAILED_CAT) openLimitModal(r.dataset.cat); });
     $('budgetHistory').addEventListener('click', e => { const b = e.target.closest('button[data-pid]'); if (b) deletePayment(b.dataset.pid); });
     $('expenseForm').addEventListener('submit', handleExpenseSubmit);
     $('expenseCancel').addEventListener('click', closeExpenseModal);
@@ -2172,9 +2454,19 @@
     $('cardNext').addEventListener('click', () => shiftMonth('card', 1));
     $('btnNewPurchase').addEventListener('click', openPurchaseModal);
     $('btnNewCard').addEventListener('click', () => openCardModal(null));
+    $('btnNewInvoice').addEventListener('click', () => openInvoiceModal());
+    $('budgetCards').addEventListener('click', e => { const r = e.target.closest('.bd-row[data-card]'); if (r) openCardModal(r.dataset.card); });
+    $('formToInvoice').addEventListener('click', handleFormToInvoice);
+    $('invoiceForm').addEventListener('submit', handleInvoiceSubmit);
+    $('invoiceCancel').addEventListener('click', closeInvoiceModal);
+    $('invoiceRemove').addEventListener('click', handleInvoiceRemove);
+    $('invoiceOverlay').addEventListener('click', e => { if (e.target.id === 'invoiceOverlay') closeInvoiceModal(); });
+    $('cFimMes').addEventListener('change', e => { $('cFech').disabled = e.target.checked; if (e.target.checked) $('cFech').value = 31; });
     $('cardsList').addEventListener('click', e => {
       const edit = e.target.closest('[data-action="edit-card"]');
       if (edit) { openCardModal(edit.dataset.card); return; }
+      const editInv = e.target.closest('[data-action="edit-invoice"]');
+      if (editInv) { const [cid, key] = editInv.dataset.inv.split('|'); openInvoiceModal({ cartaoId: cid, key }); return; }
       const pay = e.target.closest('[data-action="payinv"]');
       if (pay) { const [cid, key] = pay.dataset.inv.split('|'); payInvoice(cid, key); return; }
       const del = e.target.closest('button[data-pid]');
@@ -2185,6 +2477,9 @@
     $('purchaseOverlay').addEventListener('click', e => { if (e.target.id === 'purchaseOverlay') closePurchaseModal(); });
     $('pCartao').addEventListener('change', updatePurchaseHint);
     $('pData').addEventListener('change', updatePurchaseHint);
+    $('pParcelas').addEventListener('change', updatePurchaseHint);
+    $('pModo').addEventListener('change', updatePurchaseHint);
+    $('pValor').addEventListener('input', updatePurchaseHint);
     $('pCategoria').addEventListener('change', e => onCategoryChange(e.target));
     $('cardForm').addEventListener('submit', handleCardSubmit);
     $('cardCancel').addEventListener('click', closeCardModal);
